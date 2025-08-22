@@ -1,25 +1,24 @@
-import * as React from "react";
-import { View, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { signInWithEmail } from "~/lib/supabase";
-import { Button } from "~/components/ui/button";
-import { Text } from "~/components/ui/text";
+import { Link } from "lucide-react-native";
+import * as React from "react";
+import { View, TextInput, Alert, Button } from "react-native";
+import { signUpWithEmail } from "~/lib/supabase";
 
-export default function LoginScreen() {
+export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
-  async function handleSignIn() {
+  async function handleSignUp() {
     setLoading(true);
     try {
-      const { data, error } = await signInWithEmail(email.trim(), password);
+      const { data, error } = await signUpWithEmail(email.trim(), password);
       if (error) {
-        Alert.alert("Sign in error", error.message ?? String(error));
+        Alert.alert("Sign up error", error.message ?? String(error));
       } else if (data) {
         // Signed in — navigate to home
-        router.replace("/");
+        router.replace("/(tabs)/");
       }
     } catch (err: any) {
       Alert.alert("Unexpected error", err.message ?? String(err));
@@ -31,7 +30,7 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 justify-center items-center p-6 bg-secondary/30">
       <View className="w-full max-w-sm p-6 rounded-2xl bg-card/80">
-        <Text className="text-2xl font-bold mb-4">Sign in</Text>
+        <Text className="text-2xl font-bold mb-4">Sign up</Text>
         <Text className="text-sm text-muted-foreground mb-1">Email</Text>
         <TextInput
           value={email}
@@ -50,9 +49,14 @@ export default function LoginScreen() {
           placeholder="••••••••"
           className="border border-border rounded px-3 py-2 mb-4"
         />
-        <Button onPress={handleSignIn} disabled={loading}>
-          <Text>{loading ? "Signing in..." : "Sign in"}</Text>
+        <Button onPress={handleSignUp} disabled={loading}>
+          <Text>{loading ? "Signing up..." : "Sign up"}</Text>
         </Button>
+        <Link href="/(auth)/login" className="mt-4 text-center">
+          <Text className="text-sm text-muted-foreground">
+            Already have an account? Sign in
+          </Text>
+        </Link>
       </View>
     </View>
   );

@@ -48,19 +48,15 @@ export default function RootLayout() {
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
       <Stack>
         <Stack.Screen
-          name="index"
+          name="(auth)"
           options={{
-            title: "Starter Base",
-            headerRight: () => (
-              <View className="flex-row items-center">
-                <ThemeToggle />
-                <Link href={"/login" as any} asChild>
-                  <Button variant="ghost">
-                    <Text className="ml-2">Login</Text>
-                  </Button>
-                </Link>
-              </View>
-            ),
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
           }}
         />
       </Stack>
