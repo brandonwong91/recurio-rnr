@@ -1,43 +1,65 @@
 import * as React from "react";
-import { View, TextInput, Alert } from "react-native";
+import { View, TextInput, Alert, Platform } from "react-native";
 import { useRouter, Link } from "expo-router";
 import { signInWithEmail, supabase } from "~/lib/supabase";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
+
+WebBrowser.maybeCompleteAuthSession();
+
+// Function to extract tokens from the redirect URL and set the session
+const createSessionFromUrl = async (url: string) => {
+  const { params, errorCode } = QueryParams.getQueryParams(url);
+
+  if (errorCode) {
+    Alert.alert("Authentication Error", errorCode);
+    return;
+  }
+
+  const { access_token, refresh_token } = params;
+
+  if (!access_token || !refresh_token) {
+    return;
+  }
+
+  const { data, error } = await supabase.auth.setSession({
+    access_token,
+    refresh_token,
+  });
+
+  if (error) {
+    Alert.alert("Session Error", error.message);
+  }
+  return data;
+};
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+  const url = Linking.useURL();
 
   React.useEffect(() => {
-    const hash = window.location.hash;
-    if (hash) {
-      const params = new URLSearchParams(hash.substring(1));
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
+    GoogleSignin.configure({
+      scopes: [
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+      ],
+      webClientId: process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID ?? "",
+    });
 
-      if (accessToken && refreshToken) {
-        setLoading(true);
-        supabase.auth
-          .setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
-          .then(({ error }) => {
-            if (error) {
-              Alert.alert("Login error", error.message);
-            } else {
-              router.replace("/(tabs)");
-            }
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      }
+    if (url) {
+      createSessionFromUrl(url);
     }
-  }, [router]);
+  }, [url]);
 
   async function handleSignIn() {
     setLoading(true);
@@ -47,8 +69,7 @@ export default function LoginScreen() {
       if (error) {
         Alert.alert("Sign in error", error.message ?? String(error));
       } else if (data) {
-        // Signed in — navigate to home
-        router.replace("/(tabs)");
+        // Signed in — navigate to home, handled by _layout.tsx
       }
     } catch (err: any) {
       Alert.alert("Unexpected error", err.message ?? String(err));
@@ -57,18 +78,75 @@ export default function LoginScreen() {
     }
   }
 
+  const signInWithGoogleWeb = async () => {
+    try {
+      const redirectUri = Linking.createURL("/auth/callback");
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUri,
+          skipBrowserRedirect: true, // This is important to handle the redirect manually
+        },
+      });
+
+      if (error) {
+        Alert.alert("Sign In Error", error.message);
+        return;
+      }
+
+      const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+
+      if (res.type === "success") {
+        const { url } = res;
+        await createSessionFromUrl(url);
+      }
+    } catch (error) {
+      console.error("Web Sign-In Error:", error);
+      Alert.alert(
+        "Sign-In Error",
+        "An unexpected error occurred during sign-in."
+      );
+    }
+  };
+
+  const signInWithGoogleAndroid = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      if (userInfo.data?.idToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: userInfo.data.idToken,
+        });
+        console.log(data);
+        if (error) {
+          Alert.alert("Sign in error", error.message);
+        }
+        // onAuthStateChange in _layout.tsx will handle the redirect
+      } else {
+        throw new Error("no ID token present!");
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled the login flow
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // operation (e.g. sign in) is in progress already
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        // play services not available or outdated
+      } else {
+        Alert.alert("Sign in error", error.message);
+      }
+    }
+  };
+
   async function handleSignInWithGoogle() {
     setLoading(true);
     try {
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          // redirectTo: `${window.location.origin}`,
-          redirectTo: `${window.location.origin}/(auth)/login`, // Adjust redirect URL as needed
-        },
-      });
-    } catch (err: any) {
-      Alert.alert("Unexpected error", err.message ?? String(err));
+      if (Platform.OS === "web") {
+        await signInWithGoogleWeb();
+      } else {
+        await signInWithGoogleAndroid();
+      }
     } finally {
       setLoading(false);
     }

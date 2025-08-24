@@ -6,18 +6,15 @@ import {
   Theme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as React from "react";
-import { Appearance, Platform, View } from "react-native";
-import { Button } from "~/components/ui/button";
-import { Text } from "~/components/ui/text";
-import { Link } from "expo-router";
+import { Appearance, Platform } from "react-native";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
-import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
+import { supabase } from "~/lib/supabase";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -42,6 +39,23 @@ const usePlatformSpecificSetup = Platform.select({
 export default function RootLayout() {
   usePlatformSpecificSetup();
   const { isDarkColorScheme } = useColorScheme();
+  const segments = useSegments();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const inAuthGroup = segments[0] === '(auth)';
+
+      if (session && inAuthGroup) {
+        router.replace('/(tabs)');
+      } else if (!session && !inAuthGroup) {
+        router.replace('/(auth)/login');
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [segments, router]);
 
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
