@@ -1,7 +1,7 @@
 import * as React from "react";
-import { View, TextInput, Alert, Platform } from "react-native";
-import { useRouter, Link } from "expo-router";
-import { signInWithEmail, supabase } from "~/lib/supabase";
+import { View, Alert, Platform } from "react-native";
+import { useRouter } from "expo-router";
+import { supabase } from "~/lib/supabase";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import {
@@ -60,23 +60,6 @@ export default function LoginScreen() {
       createSessionFromUrl(url);
     }
   }, [url]);
-
-  async function handleSignIn() {
-    setLoading(true);
-    try {
-      const { data, error } = await signInWithEmail(email.trim(), password);
-      console.log("Sign in with email result:", { data, error });
-      if (error) {
-        Alert.alert("Sign in error", error.message ?? String(error));
-      } else if (data) {
-        // Signed in — navigate to home, handled by _layout.tsx
-      }
-    } catch (err: any) {
-      Alert.alert("Unexpected error", err.message ?? String(err));
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const signInWithGoogleWeb = async () => {
     try {
@@ -156,27 +139,6 @@ export default function LoginScreen() {
     <View className="flex-1 justify-center items-center p-6 bg-secondary/30">
       <View className="w-full max-w-sm p-6 rounded-2xl bg-card/80">
         <Text className="text-2xl font-bold mb-4">Sign in</Text>
-        <Text className="text-sm text-muted-foreground mb-1">Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          placeholder="you@example.com"
-          className="border border-border rounded px-3 py-2 mb-3"
-        />
-        <Text className="text-sm text-muted-foreground mb-1">Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholder="••••••••"
-          className="border border-border rounded px-3 py-2 mb-4"
-        />
-        <Button onPress={handleSignIn} disabled={loading}>
-          <Text>{loading ? "Signing in..." : "Sign in"}</Text>
-        </Button>
         <Button
           onPress={handleSignInWithGoogle}
           disabled={loading}
@@ -184,11 +146,6 @@ export default function LoginScreen() {
         >
           <Text>{loading ? "Signing in..." : "Sign in with Google"}</Text>
         </Button>
-        <Link href="/(auth)/sign-up" className="mt-4 text-center">
-          <Text className="text-sm text-muted-foreground">
-            Don't have an account? Sign up
-          </Text>
-        </Link>
       </View>
     </View>
   );
