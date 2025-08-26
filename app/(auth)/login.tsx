@@ -1,6 +1,6 @@
+import { LogIn } from "lucide-react-native";
 import * as React from "react";
 import { View, Alert, Platform } from "react-native";
-import { useRouter } from "expo-router";
 import { supabase } from "~/lib/supabase";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
@@ -41,9 +41,6 @@ const createSessionFromUrl = async (url: string) => {
 };
 
 export default function LoginScreen() {
-  const router = useRouter();
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const url = Linking.useURL();
 
@@ -53,7 +50,7 @@ export default function LoginScreen() {
         "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/userinfo.email",
       ],
-      webClientId: process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID ?? "",
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "",
     });
 
     if (url) {
@@ -84,7 +81,6 @@ export default function LoginScreen() {
         await createSessionFromUrl(url);
       }
     } catch (error) {
-      console.error("Web Sign-In Error:", error);
       Alert.alert(
         "Sign-In Error",
         "An unexpected error occurred during sign-in."
@@ -95,26 +91,28 @@ export default function LoginScreen() {
   const signInWithGoogleAndroid = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      if (userInfo.data?.idToken) {
+      const { data: signInData } = await GoogleSignin.signIn();
+      if (signInData && signInData?.idToken) {
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: "google",
-          token: userInfo.data.idToken,
+          token: signInData?.idToken,
         });
-        console.log(data);
+
         if (error) {
           Alert.alert("Sign in error", error.message);
         }
-        // onAuthStateChange in _layout.tsx will handle the redirect
       } else {
         throw new Error("no ID token present!");
       }
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
+        console.log("user cancelled the login flow");
       } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("operation (e.g. sign in) is in progress already");
         // operation (e.g. sign in) is in progress already
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log("play services not available or outdated");
         // play services not available or outdated
       } else {
         Alert.alert("Sign in error", error.message);
@@ -136,15 +134,28 @@ export default function LoginScreen() {
   }
 
   return (
-    <View className="flex-1 justify-center items-center p-6 bg-secondary/30">
-      <View className="w-full max-w-sm p-6 rounded-2xl bg-card/80">
-        <Text className="text-2xl font-bold mb-4">Sign in</Text>
+    <View className="flex-1 justify-center items-center p-6 bg-background">
+      <View className="w-full max-w-sm p-8 rounded-2xl bg-card shadow-lg">
+        <View className="flex-row justify-center items-center mb-6">
+          <Text className="text-3xl font-bold ml-2 text-foreground">
+            Recurio
+          </Text>
+        </View>
+        <Text className="text-2xl font-bold mb-2 text-center text-foreground">
+          Welcome back
+        </Text>
+        <Text className="text-muted-foreground text-center mb-8">
+          Sign in to continue your journey
+        </Text>
         <Button
           onPress={handleSignInWithGoogle}
           disabled={loading}
-          className="mt-4"
+          className="mt-4 bg-primary rounded-full flex-row items-center justify-center h-12"
         >
-          <Text>{loading ? "Signing in..." : "Sign in with Google"}</Text>
+          <LogIn className="text-primary-foreground mr-2" size={20} />
+          <Text className="text-primary-foreground font-bold">
+            {loading ? "Signing in..." : "Sign in with Google"}
+          </Text>
         </Button>
       </View>
     </View>
