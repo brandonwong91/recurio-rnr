@@ -11,7 +11,7 @@ type PaymentState = {
   payments: PaymentItemType[];
   editingPaymentId: string | null;
   fetchPayments: () => Promise<void>;
-  addPayment: (item: Omit<PaymentItemType, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
+  addPayment: (item: Omit<PaymentItemType, 'id' | 'created_at' | 'user_id' | 'done_status' | 'paid_date'>) => Promise<void>;
   updatePayment: (item: Partial<PaymentItemType> & { id: string }) => Promise<void>;
   removePayment: (id: string) => Promise<void>;
   toggleDone: (id: string) => Promise<void>;

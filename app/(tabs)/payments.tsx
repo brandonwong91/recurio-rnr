@@ -217,7 +217,7 @@ export default function PaymentsScreen() {
   };
 
   return (
-    <View className="flex flex-col p-4 max-w-sm mx-auto">
+    <View className="flex flex-col flex-1 p-4 max-w-sm mx-auto">
       <View className="flex-row mb-4">
         <TextInput
           className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
