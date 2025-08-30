@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { View, TextInput, SectionList, Pressable } from 'react-native';
-import { Text } from '~/components/ui/text';
-import { useGroceryStore } from '~/lib/stores/groceryStore';
-import { Checkbox } from '~/components/ui/checkbox';
-import { Button } from '~/components/ui/button';
-import { Separator } from '~/components/ui/separator';
-import { Badge } from '~/components/ui/badge';
-import { EditGroceryItem } from '~/components/grocery/EditGroceryItem';
-import { ListPlus } from 'lucide-react-native';
+import { useEffect, useState } from "react";
+import { View, TextInput, SectionList, Pressable } from "react-native";
+import { Text } from "~/components/ui/text";
+import { useGroceryStore } from "~/lib/stores/groceryStore";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Button } from "~/components/ui/button";
+import { Separator } from "~/components/ui/separator";
+import { Badge } from "~/components/ui/badge";
+import { EditGroceryItem } from "~/components/grocery/EditGroceryItem";
+import { ListPlus } from "lucide-react-native";
 
 const groupItemsByTag = (items: any[]) => {
   const grouped: { [key: string]: any[] } = { Uncategorized: [] };
@@ -108,7 +108,7 @@ export default function GroceriesScreen() {
           <Checkbox
             checked={item.done}
             onCheckedChange={() => toggleItem(item.id)}
-            className="mr-2 w-4 h-4"
+            className="mr-2 w-4 h-4 cursor-pointer"
           />
           <View className="flex-row items-center">
             <Text className={`ml-2 ${item.done ? "line-through" : ""}`}>
@@ -133,12 +133,15 @@ export default function GroceriesScreen() {
     if (title === "Uncategorized") {
       return null;
     }
-    return <Text className="text-lg font-bold mt-4 mb-2">{title}</Text>;
+    return (
+      <Badge variant={"secondary"} className="mb-2">
+        {title}
+      </Badge>
+    );
   };
 
   return (
     <View className="flex flex-col p-4 max-w-sm mx-auto">
-      {/* <Text className="text-2xl font-bold mb-4">Grocery List</Text> */}
       <View className="flex-row mb-4">
         <TextInput
           className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
