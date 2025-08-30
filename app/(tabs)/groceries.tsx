@@ -1,44 +1,96 @@
-import { useState } from 'react';
-import { View, TextInput, FlatList, Alert, Pressable } from 'react-native';
-import { Text } from '~/components/ui/text';
-import { useGroceryStore } from '~/lib/stores/groceryStore';
-import { Checkbox } from '~/components/ui/checkbox';
-import { Button } from '~/components/ui/button';
-import { Separator } from '~/components/ui/separator';
-import { Badge } from '~/components/ui/badge';
-import { EditGroceryItem } from '~/components/grocery/EditGroceryItem';
+import { useState } from "react";
+import { View, TextInput, SectionList, Pressable } from "react-native";
+import { Text } from "~/components/ui/text";
+import { useGroceryStore } from "~/lib/stores/groceryStore";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Button } from "~/components/ui/button";
+import { Separator } from "~/components/ui/separator";
+import { Badge } from "~/components/ui/badge";
+import { EditGroceryItem } from "~/components/grocery/EditGroceryItem";
+import { ListPlus } from "lucide-react-native";
+
+const groupItemsByTag = (items: any[]) => {
+  const grouped: { [key: string]: any[] } = { Uncategorized: [] };
+
+  items.forEach((item) => {
+    if (item.tags && item.tags.length > 0) {
+      item.tags.forEach((tag: string) => {
+        if (!grouped[tag]) {
+          grouped[tag] = [];
+        }
+        grouped[tag].push(item);
+      });
+    } else {
+      grouped["Uncategorized"].push(item);
+    }
+  });
+
+  const sections = Object.keys(grouped)
+    .filter((tag) => grouped[tag].length > 0)
+    .map((tag) => ({
+      title: tag,
+      data: grouped[tag],
+    }));
+
+  // Move Uncategorized to the top
+  const uncategorizedIndex = sections.findIndex(
+    (section) => section.title === "Uncategorized"
+  );
+  if (uncategorizedIndex > 0) {
+    const uncategorizedSection = sections.splice(uncategorizedIndex, 1)[0];
+    sections.unshift(uncategorizedSection);
+  }
+
+  return sections;
+};
 
 export default function GroceriesScreen() {
-  const [newItem, setNewItem] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [newItem, setNewItem] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [tags, setTags] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { items, addItem, toggleItem, uncheckAll, clearChecked, editingItemId, setEditingItemId } = useGroceryStore();
+  const {
+    items,
+    addItem,
+    toggleItem,
+    uncheckAll,
+    editingItemId,
+    setEditingItemId,
+  } = useGroceryStore();
 
   const handleAddItem = () => {
     if (newItem.trim()) {
       if (quantity.trim() && !/^[0-9]+$/.test(quantity.trim())) {
-        setError('Quantity must be a number.');
+        setError("Quantity must be a number.");
         return;
       }
       const q = quantity.trim() ? parseInt(quantity.trim(), 10) : undefined;
-      addItem(newItem.trim(), q);
-      setNewItem('');
-      setQuantity('');
+      const newTags = tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag);
+      addItem(newItem.trim(), q, newTags);
+      setNewItem("");
+      setQuantity("");
+      setTags("");
       setError(null);
     }
   };
 
   const handleQuantityChange = (text: string) => {
-    if (text === '' || /^[0-9]+$/.test(text)) {
+    if (text === "" || /^[0-9]+$/.test(text)) {
       setQuantity(text);
       setError(null);
     } else {
-      setError('Quantity must be a number.');
+      setError("Quantity must be a number.");
     }
   };
 
   const uncheckedItems = items.filter((item) => !item.done);
   const checkedItems = items.filter((item) => item.done);
+
+  const uncheckedSections = groupItemsByTag(uncheckedItems);
+  const checkedSections = groupItemsByTag(checkedItems);
 
   const renderItem = ({ item }: { item: any }) => {
     if (item.id === editingItemId) {
@@ -47,14 +99,14 @@ export default function GroceriesScreen() {
 
     return (
       <Pressable onPress={() => setEditingItemId(item.id)}>
-        <View className="flex-row items-center mb-2">
+        <View className="flex-row items-center mb-2 ml-4">
           <Checkbox
             checked={item.done}
             onCheckedChange={() => toggleItem(item.id)}
             className="mr-2 w-4 h-4"
           />
           <View className="flex-row items-center">
-            <Text className={`ml-2 ${item.done ? 'line-through' : ''}`}>
+            <Text className={`ml-2 ${item.done ? "line-through" : ""}`}>
               {item.name}
             </Text>
             {item.quantity && (
@@ -67,45 +119,21 @@ export default function GroceriesScreen() {
       </Pressable>
     );
   };
-  
-  const renderCheckedItem = ({ item }: { item: any }) => {
-    if (item.id === editingItemId) {
-      return <EditGroceryItem item={item} />;
-    }
 
-    return (
-      <Pressable onPress={() => setEditingItemId(item.id)}>
-        <View className="flex-row items-center mb-2">
-          <Checkbox
-            checked={item.done}
-            onCheckedChange={() => toggleItem(item.id)}
-            className="mr-2 w-4 h-4"
-          />
-          <View>
-            <View className="flex-row items-center">
-              <Text className={`ml-2 ${item.done ? 'line-through' : ''}`}>
-                {item.name}
-              </Text>
-              {item.quantity && (
-                <Badge variant="secondary" className="ml-2">
-                  <Text>{item.quantity}</Text>
-                </Badge>
-              )}
-            </View>
-            {item.done && item.checkedAt && (
-              <Text className="ml-2 text-xs text-gray-500">
-                {new Date(item.checkedAt).toLocaleDateString()}
-              </Text>
-            )}
-          </View>
-        </View>
-      </Pressable>
-    );
+  const renderSectionHeader = ({
+    section: { title },
+  }: {
+    section: { title: string };
+  }) => {
+    if (title === "Uncategorized") {
+      return null;
+    }
+    return <Text className="text-lg font-bold mt-4 mb-2">{title}</Text>;
   };
 
   return (
-    <View className="flex-1 p-4 max-w-sm mx-auto">
-      <Text className="text-2xl font-bold mb-4">Grocery List</Text>
+    <View className="flex flex-col p-4 max-w-sm mx-auto">
+      {/* <Text className="text-2xl font-bold mb-4">Grocery List</Text> */}
       <View className="flex-row mb-4">
         <TextInput
           className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
@@ -115,20 +143,30 @@ export default function GroceriesScreen() {
           onSubmitEditing={handleAddItem}
         />
         <TextInput
-          className="w-16 border border-gray-300 rounded-lg p-2 mr-2"
+          className="w-16 border border-gray-300 rounded-lg p-2"
           placeholder="Qty"
           value={quantity}
           onChangeText={handleQuantityChange}
           keyboardType="numeric"
           onSubmitEditing={handleAddItem}
         />
-        <Button onPress={handleAddItem}><Text>Add</Text></Button>
       </View>
-      {error && <Text className="text-red-500 mb-2">{error}</Text>}
-      <FlatList
-        data={uncheckedItems}
-        keyExtractor={(item) => item.id.toString()}
+      <TextInput
+        className="border border-gray-300 rounded-lg p-2 mb-4"
+        placeholder="Tags (comma separated)"
+        value={tags}
+        onChangeText={setTags}
+        onSubmitEditing={handleAddItem}
+      />
+      <Button onPress={handleAddItem} className="mb-4">
+        <Text>Add</Text>
+      </Button>
+      {error && <Text className="text-red-500 my-2">{error}</Text>}
+      <SectionList
+        sections={uncheckedSections}
+        keyExtractor={(item, index) => item.id.toString() + index}
         renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
       />
       {checkedItems.length > 0 && (
         <>
@@ -136,14 +174,21 @@ export default function GroceriesScreen() {
           <View className="flex-row justify-between items-center mb-2">
             <Text className="text-lg font-bold">Checked Items</Text>
             <View className="flex-row">
-              <Button onPress={uncheckAll} variant="outline" size="sm"><Text>Uncheck All</Text></Button>
-              <Button onPress={clearChecked} variant="destructive" size="sm" className="ml-2"><Text>Clear Checked</Text></Button>
+              <Button
+                onPress={uncheckAll}
+                variant="ghost"
+                size="sm"
+                className="ml-2"
+              >
+                <ListPlus size={16} />
+              </Button>
             </View>
           </View>
-          <FlatList
-            data={checkedItems}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderCheckedItem}
+          <SectionList
+            sections={checkedSections}
+            keyExtractor={(item, index) => item.id.toString() + index}
+            renderItem={renderItem}
+            renderSectionHeader={renderSectionHeader}
           />
         </>
       )}
