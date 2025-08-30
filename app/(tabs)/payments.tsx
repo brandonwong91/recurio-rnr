@@ -9,6 +9,7 @@ import { Badge } from "~/components/ui/badge";
 import { Repeat2 } from "lucide-react-native";
 import { EditPaymentItem } from "~/components/payment/EditPaymentItem";
 import { DatePicker } from "~/components/ui/DatePicker";
+import * as Accordion from "@rn-primitives/accordion";
 
 const getDayDifference = (dateString: string) => {
   if (!dateString) return null;
@@ -218,46 +219,59 @@ export default function PaymentsScreen() {
 
   return (
     <View className="flex flex-col flex-1 p-4 max-w-sm mx-auto">
-      <View className="flex-row mb-4">
-        <TextInput
-          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
-          placeholder="Payment name"
-          value={name}
-          onChangeText={setName}
-          onSubmitEditing={handleAddPayment}
-        />
-        <TextInput
-          className="w-24 border border-gray-300 rounded-lg p-2"
-          placeholder="Amount"
-          value={amount}
-          onChangeText={handleAmountChange}
-          keyboardType="numeric"
-          onSubmitEditing={handleAddPayment}
-        />
-      </View>
-      <TextInput
-        className="border border-gray-300 rounded-lg p-2 mb-4"
-        placeholder="Tag"
-        value={tag}
-        onChangeText={setTag}
-        onSubmitEditing={handleAddPayment}
-      />
-      <DatePicker
-        date={dueDate}
-        onDateChange={setDueDate}
-        placeholder="Select Due Date"
-      />
-      <TextInput
-        className="border border-gray-300 rounded-lg p-2 mb-4"
-        placeholder="Frequency (in days)"
-        value={frequency}
-        onChangeText={setFrequency}
-        keyboardType="numeric"
-        onSubmitEditing={handleAddPayment}
-      />
-      <Button onPress={handleAddPayment} className="mb-4">
-        <Text>Add Payment</Text>
-      </Button>
+      <Accordion.Root type="single" collapsible>
+        <Accordion.Item value="item-1">
+          <Accordion.Header>
+            <Accordion.Trigger className="w-full">
+              <View className="flex-row justify-between items-center p-2 border rounded-lg mb-4 text-center">
+                <Text className="font-bold text-center">Add Payment</Text>
+              </View>
+            </Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Content>
+            <View className="flex-row mb-4">
+              <TextInput
+                className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
+                placeholder="Payment name"
+                value={name}
+                onChangeText={setName}
+                onSubmitEditing={handleAddPayment}
+              />
+              <TextInput
+                className="w-24 border border-gray-300 rounded-lg p-2"
+                placeholder="Amount"
+                value={amount}
+                onChangeText={handleAmountChange}
+                keyboardType="numeric"
+                onSubmitEditing={handleAddPayment}
+              />
+            </View>
+            <TextInput
+              className="border border-gray-300 rounded-lg p-2 mb-4"
+              placeholder="Tag"
+              value={tag}
+              onChangeText={setTag}
+              onSubmitEditing={handleAddPayment}
+            />
+            <DatePicker
+              date={dueDate}
+              onDateChange={setDueDate}
+              placeholder="Select Due Date"
+            />
+            <TextInput
+              className="border border-gray-300 rounded-lg p-2 mb-4"
+              placeholder="Frequency (in days)"
+              value={frequency}
+              onChangeText={setFrequency}
+              keyboardType="numeric"
+              onSubmitEditing={handleAddPayment}
+            />
+            <Button onPress={handleAddPayment} className="mb-4">
+              <Text>Add Payment</Text>
+            </Button>
+          </Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>
       {error && <Text className="text-red-500 my-2">{error}</Text>}
       <SectionList
         sections={unpaidSections}
@@ -270,7 +284,7 @@ export default function PaymentsScreen() {
         <>
           <Separator className="my-4" />
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-lg font-bold">Paid Payments</Text>
+            <Text className="text-lg font-bold">Paid</Text>
           </View>
           <SectionList
             sections={paidSections}
