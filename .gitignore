@@ -42,3 +42,5 @@ expo-env.d.ts
 .vercel
 
 credentials.json
+
+supabase/.temp/*

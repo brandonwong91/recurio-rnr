@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { View, TextInput, SectionList, Pressable } from "react-native";
-import { Text } from "~/components/ui/text";
-import { useGroceryStore } from "~/lib/stores/groceryStore";
-import { Checkbox } from "~/components/ui/checkbox";
-import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
-import { Badge } from "~/components/ui/badge";
-import { EditGroceryItem } from "~/components/grocery/EditGroceryItem";
-import { ListPlus } from "lucide-react-native";
+import { useEffect, useState } from 'react';
+import { View, TextInput, SectionList, Pressable } from 'react-native';
+import { Text } from '~/components/ui/text';
+import { useGroceryStore } from '~/lib/stores/groceryStore';
+import { Checkbox } from '~/components/ui/checkbox';
+import { Button } from '~/components/ui/button';
+import { Separator } from '~/components/ui/separator';
+import { Badge } from '~/components/ui/badge';
+import { EditGroceryItem } from '~/components/grocery/EditGroceryItem';
+import { ListPlus } from 'lucide-react-native';
 
 const groupItemsByTag = (items: any[]) => {
   const grouped: { [key: string]: any[] } = { Uncategorized: [] };
@@ -56,7 +56,12 @@ export default function GroceriesScreen() {
     uncheckAll,
     editingItemId,
     setEditingItemId,
+    fetchItems,
   } = useGroceryStore();
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const handleAddItem = () => {
     if (newItem.trim()) {

@@ -124,3 +124,177 @@ Linking.addEventListener("url", (event) => {
 export async function signOut() {
   await supabase.auth.signOut();
 }
+
+
+// ****************************************************************************
+// Grocery Item CRUD operations
+// ****************************************************************************
+
+export async function getGroceryItems() {
+  const { data, error } = await supabase
+    .from('grocery_items')
+    .select(`
+      id,
+      name,
+      quantity,
+      done,
+      checked_at,
+      tags (id, name)
+    `);
+
+  if (error) {
+    console.error('Error fetching grocery items:', error);
+    return [];
+  }
+
+  // The tags are returned as an array of objects. We need to flatten them to an array of strings.
+  return data.map(item => ({
+    ...item,
+    checkedAt: item.checked_at,
+    tags: item.tags.map((tag: any) => tag.name),
+  }));
+}
+
+export async function addGroceryItem(item: { name: string, quantity?: number, tags?: string[] }) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    console.error('User not authenticated');
+    return null;
+  }
+
+  // 1. Add the tags to the tags table (if they don't exist)
+  const tagsToAdd = item.tags || [];
+  const { data: existingTags, error: tagsError } = await supabase
+    .from('tags')
+    .select('id, name')
+    .in('name', tagsToAdd);
+
+  if (tagsError) {
+    console.error('Error fetching tags:', tagsError);
+    return null;
+  }
+
+  const newTags = tagsToAdd.filter(tagName => !existingTags.some(t => t.name === tagName));
+  const { data: addedTags, error: addTagsError } = await supabase
+    .from('tags')
+    .insert(newTags.map(name => ({ name })))
+    .select('id, name');
+
+  if (addTagsError) {
+    console.error('Error adding tags:', addTagsError);
+    return null;
+  }
+
+  const allTags = [...existingTags, ...addedTags];
+
+  // 2. Add the grocery item
+  const { data: newItem, error: addItemError } = await supabase
+    .from('grocery_items')
+    .insert({
+      name: item.name,
+      quantity: item.quantity,
+      user_id: user.id,
+    })
+    .select('id')
+    .single();
+
+  if (addItemError) {
+    console.error('Error adding grocery item:', addItemError);
+    return null;
+  }
+
+  // 3. Add the associations in the join table
+  const tagIds = allTags.map(t => t.id);
+  const { error: joinError } = await supabase
+    .from('grocery_item_tags')
+    .insert(tagIds.map(tag_id => ({
+      grocery_item_id: newItem.id,
+      tag_id,
+    })));
+
+  if (joinError) {
+    console.error('Error adding grocery item tags:', joinError);
+    return null;
+  }
+
+  return { ...item, id: newItem.id, done: false, checkedAt: null };
+}
+
+export async function updateGroceryItem(item: { id: number, name: string, quantity?: number, tags?: string[], done: boolean, checkedAt: Date | null }) {
+  // 1. Update the item itself
+  const { error: updateError } = await supabase
+    .from('grocery_items')
+    .update({
+      name: item.name,
+      quantity: item.quantity,
+      done: item.done,
+      checked_at: item.checkedAt,
+    })
+    .eq('id', item.id);
+
+  if (updateError) {
+    console.error('Error updating grocery item:', updateError);
+    return null;
+  }
+
+  // 2. Update the tags (this is more complex, for simplicity we will delete all tags and re-add them)
+  const { error: deleteTagsError } = await supabase
+    .from('grocery_item_tags')
+    .delete()
+    .eq('grocery_item_id', item.id);
+
+  if (deleteTagsError) {
+    console.error('Error deleting grocery item tags:', deleteTagsError);
+    return null;
+  }
+
+  const tagsToAdd = item.tags || [];
+  const { data: existingTags, error: tagsError } = await supabase
+    .from('tags')
+    .select('id, name')
+    .in('name', tagsToAdd);
+
+  if (tagsError) {
+    console.error('Error fetching tags:', tagsError);
+    return null;
+  }
+
+  const newTags = tagsToAdd.filter(tagName => !existingTags.some(t => t.name === tagName));
+  const { data: addedTags, error: addTagsError } = await supabase
+    .from('tags')
+    .insert(newTags.map(name => ({ name })))
+    .select('id, name');
+
+  if (addTagsError) {
+    console.error('Error adding tags:', addTagsError);
+    return null;
+  }
+
+  const allTags = [...existingTags, ...addedTags];
+  const tagIds = allTags.map(t => t.id);
+
+  const { error: joinError } = await supabase
+    .from('grocery_item_tags')
+    .insert(tagIds.map(tag_id => ({
+      grocery_item_id: item.id,
+      tag_id,
+    })));
+
+  if (joinError) {
+    console.error('Error adding grocery item tags:', joinError);
+    return null;
+  }
+
+  return item;
+}
+
+export async function deleteGroceryItem(id: number) {
+  const { error } = await supabase
+    .from('grocery_items')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting grocery item:', error);
+  }
+}
