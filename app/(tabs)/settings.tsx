@@ -13,9 +13,11 @@ import { Text } from "~/components/ui/text";
 import { supabase } from "~/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { Button } from "~/components/ui/button";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function Screen() {
   const [session, setSession] = React.useState<Session | null>(null);
+  const { colorScheme, toggleColorScheme } = useColorScheme();
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -70,13 +72,20 @@ export default function Screen() {
           <Text>Email Confirmed: {String(user.email_confirmed_at)}</Text>
           <Text>Phone: {user.phone || "N/A"}</Text>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex-row justify-between">
           <Button
             variant="outline"
             className="shadow shadow-foreground/5"
             onPress={() => supabase.auth.signOut()}
           >
             <Text>Sign Out</Text>
+          </Button>
+          <Button
+            variant="outline"
+            className="shadow shadow-foreground/5 ml-2"
+            onPress={toggleColorScheme}
+          >
+            <Text>Toggle {colorScheme === 'dark' ? 'Light' : 'Dark'} Mode</Text>
           </Button>
         </CardFooter>
       </Card>
