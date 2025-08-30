@@ -157,6 +157,20 @@ export default function LoginScreen() {
             {loading ? "Signing in..." : "Sign in with Google"}
           </Text>
         </Button>
+        {Platform.OS === 'web' && (
+          <Button
+            onPress={() =>
+              Linking.openURL(
+                "https://expo.dev/accounts/brandonwong91/projects/recurio-rnr/builds"
+              )
+            }
+            className="mt-4 bg-secondary rounded-full flex-row items-center justify-center h-12"
+          >
+            <Text className="text-secondary-foreground font-bold">
+              Download Android App
+            </Text>
+          </Button>
+        )}
       </View>
     </View>
   );
