@@ -2,11 +2,11 @@ import { Check, X } from "lucide-react-native";
 import { useState } from "react";
 import { View, TextInput } from "react-native";
 import { Button } from "~/components/ui/button";
-import { usePaymentStore, PaymentItem } from "~/lib/stores/paymentStore";
+import { usePaymentStore, PaymentItemType } from "~/lib/stores/paymentStore";
 import { DatePicker } from "~/components/ui/DatePicker";
 
 type EditPaymentItemProps = {
-  item: PaymentItem;
+  item: PaymentItemType;
 };
 
 export function EditPaymentItem({ item }: EditPaymentItemProps) {

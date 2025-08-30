@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, TextInput, SectionList, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
 import { usePaymentStore } from "~/lib/stores/paymentStore";
@@ -70,7 +70,12 @@ export default function PaymentsScreen() {
     toggleDone,
     editingPaymentId,
     setEditingPaymentId,
+    fetchPayments,
   } = usePaymentStore();
+
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
 
   const handleAddPayment = () => {
     if (name.trim() && amount.trim()) {

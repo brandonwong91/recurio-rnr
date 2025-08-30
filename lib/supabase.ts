@@ -298,3 +298,69 @@ export async function deleteGroceryItem(id: number) {
     console.error('Error deleting grocery item:', error);
   }
 }
+
+// ****************************************************************************
+// Payment Item CRUD operations
+// ****************************************************************************
+
+import { PaymentItemType } from "./types";
+
+export async function getPaymentItems() {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching payment items:', error);
+    return [];
+  }
+  return data as PaymentItemType[];
+}
+
+export async function addPaymentItem(item: Omit<PaymentItemType, 'id' | 'created_at' | 'user_id' | 'done_status' | 'paid_date'>) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    console.error('User not authenticated');
+    return null;
+  }
+
+  const { data: newItem, error } = await supabase
+    .from('payments')
+    .insert({ ...item, user_id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding payment item:', error);
+    return null;
+  }
+
+  return newItem as PaymentItemType;
+}
+
+export async function updatePaymentItem(item: Partial<PaymentItemType> & { id: string }) {
+  const { error, data } = await supabase
+    .from('payments')
+    .update(item)
+    .eq('id', item.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating payment item:', error);
+    return null;
+  }
+
+  return data as PaymentItemType;
+}
+
+export async function deletePaymentItem(id: string) {
+  const { error } = await supabase
+    .from('payments')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting payment item:', error);
+  }
+}

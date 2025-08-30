@@ -1,53 +1,65 @@
 import { create } from 'zustand';
-
-export type PaymentItem = {
-  id: string;
-  name: string;
-  amount: number;
-  tag: string;
-  due_date: string;
-  paid_date: string | null;
-  frequency: number;
-  done_status: boolean;
-};
+import { PaymentItemType } from '../types';
+import {
+  getPaymentItems,
+  addPaymentItem,
+  updatePaymentItem,
+  deletePaymentItem,
+} from '../supabase';
 
 type PaymentState = {
-  payments: PaymentItem[];
+  payments: PaymentItemType[];
   editingPaymentId: string | null;
-  addPayment: (item: Omit<PaymentItem, 'id' | 'done_status' | 'paid_date'>) => void;
-  removePayment: (id: string) => void;
-  updatePayment: (item: Partial<PaymentItem> & { id: string }) => void;
-  toggleDone: (id: string) => void;
+  fetchPayments: () => Promise<void>;
+  addPayment: (item: Omit<PaymentItemType, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
+  updatePayment: (item: Partial<PaymentItemType> & { id: string }) => Promise<void>;
+  removePayment: (id: string) => Promise<void>;
+  toggleDone: (id: string) => Promise<void>;
   setEditingPaymentId: (id: string | null) => void;
 };
 
-export const usePaymentStore = create<PaymentState>((set) => ({
+export const usePaymentStore = create<PaymentState>((set, get) => ({
   payments: [],
   editingPaymentId: null,
-  addPayment: (item) =>
+  fetchPayments: async () => {
+    const payments = await getPaymentItems();
+    set({ payments });
+  },
+  addPayment: async (item) => {
+    const newItem = await addPaymentItem(item);
+    if (newItem) {
+      set((state) => ({ payments: [...state.payments, newItem] }));
+    }
+  },
+  updatePayment: async (item) => {
+    const updatedItem = await updatePaymentItem(item);
+    if (updatedItem) {
+      set((state) => ({
+        payments: state.payments.map((p) => (p.id === updatedItem.id ? { ...p, ...updatedItem } : p)),
+        editingPaymentId: null,
+      }));
+    }
+  },
+  removePayment: async (id) => {
+    await deletePaymentItem(id);
     set((state) => ({
-      payments: [
-        ...state.payments,
-        {
-          ...item,
-          id: new Date().toISOString(),
-          done_status: false,
-          paid_date: null,
-        },
-      ],
-    })),
-  removePayment: (id) =>
-    set((state) => ({ payments: state.payments.filter((item) => item.id !== id) })),
-  updatePayment: (item) =>
-    set((state) => ({
-      payments: state.payments.map((p) => (p.id === item.id ? { ...p, ...item } : p)),
-      editingPaymentId: null,
-    })),
-  toggleDone: (id) =>
-    set((state) => ({
-      payments: state.payments.map((p) =>
-        p.id === id ? { ...p, done_status: !p.done_status, paid_date: !p.done_status ? new Date().toISOString() : null } : p
-      ),
-    })),
+      payments: state.payments.filter((p) => p.id !== id),
+    }));
+  },
+  toggleDone: async (id) => {
+    const item = get().payments.find((p) => p.id === id);
+    if (item) {
+      const updatedItemData = {
+        done_status: !item.done_status,
+        paid_date: !item.done_status ? new Date().toISOString() : null,
+      };
+      const updatedItem = await updatePaymentItem({ id, ...updatedItemData });
+      if (updatedItem) {
+        set((state) => ({
+            payments: state.payments.map((p) => (p.id === id ? updatedItem : p)),
+        }));
+      }
+    }
+  },
   setEditingPaymentId: (id) => set({ editingPaymentId: id }),
 }));
