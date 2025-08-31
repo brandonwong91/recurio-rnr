@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { PaymentItemType } from '../types';
+export type { PaymentItemType };
 import {
   getPaymentItems,
   addPaymentItem,

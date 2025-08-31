@@ -8,13 +8,13 @@ import {
 } from "@react-navigation/native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as React from "react";
 import { Appearance, Platform } from "react-native";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { supabase } from "~/lib/supabase";
+import React, { useEffect, useLayoutEffect } from "react";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -43,13 +43,15 @@ export default function RootLayout() {
   const router = useRouter();
 
   React.useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const inAuthGroup = segments[0] === '(auth)';
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const inAuthGroup = segments[0] === "(auth)";
 
       if (session && inAuthGroup) {
-        router.replace('/(tabs)');
+        router.replace("/(tabs)");
       } else if (!session && !inAuthGroup) {
-        router.replace('/(auth)/login');
+        router.replace("/(auth)/login");
       }
     });
     return () => {
@@ -81,8 +83,8 @@ export default function RootLayout() {
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined"
-    ? React.useEffect
-    : React.useLayoutEffect;
+    ? useEffect
+    : useLayoutEffect;
 
 function useSetWebBackgroundClassName() {
   useIsomorphicLayoutEffect(() => {
@@ -92,7 +94,7 @@ function useSetWebBackgroundClassName() {
 }
 
 function useSetAndroidNavigationBar() {
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     setAndroidNavigationBar(Appearance.getColorScheme() ?? "light");
   }, []);
 }
