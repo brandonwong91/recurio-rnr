@@ -37,19 +37,19 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
     <View className="mb-2">
       <View className="flex-row items-center">
         <TextInput
-          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
+          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
           value={name}
           onChangeText={setName}
         />
         <TextInput
-          className="w-16 border border-gray-300 rounded-lg p-2"
+          className="w-16 border border-gray-300 rounded-lg p-2 dark:text-white"
           value={quantity}
           onChangeText={setQuantity}
           keyboardType="numeric"
         />
       </View>
       <TextInput
-        className="border border-gray-300 rounded-lg p-2 mt-2"
+        className="border border-gray-300 rounded-lg p-2 mt-2 dark:text-white"
         placeholder="Tags (comma separated)"
         value={tags}
         onChangeText={setTags}

@@ -231,14 +231,14 @@ export default function PaymentsScreen() {
           <Accordion.Content>
             <View className="flex-row mb-4">
               <TextInput
-                className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
+                className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
                 placeholder="Payment name"
                 value={name}
                 onChangeText={setName}
                 onSubmitEditing={handleAddPayment}
               />
               <TextInput
-                className="w-24 border border-gray-300 rounded-lg p-2"
+                className="w-24 border border-gray-300 rounded-lg p-2 dark:text-white"
                 placeholder="Amount"
                 value={amount}
                 onChangeText={handleAmountChange}
@@ -247,7 +247,7 @@ export default function PaymentsScreen() {
               />
             </View>
             <TextInput
-              className="border border-gray-300 rounded-lg p-2 mb-4"
+              className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
               placeholder="Tag"
               value={tag}
               onChangeText={setTag}
@@ -259,7 +259,7 @@ export default function PaymentsScreen() {
               placeholder="Select Due Date"
             />
             <TextInput
-              className="border border-gray-300 rounded-lg p-2 mb-4"
+              className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
               placeholder="Frequency (in days)"
               value={frequency}
               onChangeText={setFrequency}

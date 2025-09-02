@@ -36,19 +36,19 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
     <View className="mb-2">
       <View className="flex-row items-center">
         <TextInput
-          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
+          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
           value={name}
           onChangeText={setName}
         />
         <TextInput
-          className="w-24 border border-gray-300 rounded-lg p-2"
+          className="w-24 border border-gray-300 rounded-lg p-2 dark:text-white"
           value={amount}
           onChangeText={setAmount}
           keyboardType="numeric"
         />
       </View>
       <TextInput
-        className="border border-gray-300 rounded-lg p-2 mt-2 mb-2"
+        className="border border-gray-300 rounded-lg p-2 mt-2 mb-2 dark:text-white"
         placeholder="Tag"
         value={tag}
         onChangeText={setTag}
@@ -59,7 +59,7 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
         placeholder="Select Due Date"
       />
       <TextInput
-        className="border border-gray-300 rounded-lg p-2 -mt-2"
+        className="border border-gray-300 rounded-lg p-2 -mt-2 dark:text-white"
         placeholder="Frequency (in days)"
         value={frequency}
         onChangeText={setFrequency}

@@ -144,14 +144,14 @@ export default function GroceriesScreen() {
     <View className="flex flex-col p-4 max-w-sm mx-auto">
       <View className="flex-row mb-4">
         <TextInput
-          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
+          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
           placeholder="Add new item"
           value={newItem}
           onChangeText={setNewItem}
           onSubmitEditing={handleAddItem}
         />
         <TextInput
-          className="w-16 border border-gray-300 rounded-lg p-2"
+          className="w-16 border border-gray-300 rounded-lg p-2 dark:text-white"
           placeholder="Qty"
           value={quantity}
           onChangeText={handleQuantityChange}
@@ -160,7 +160,7 @@ export default function GroceriesScreen() {
         />
       </View>
       <TextInput
-        className="border border-gray-300 rounded-lg p-2 mb-4"
+        className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
         placeholder="Tags (comma separated)"
         value={tags}
         onChangeText={setTags}
