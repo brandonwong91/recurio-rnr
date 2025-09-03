@@ -9,4 +9,5 @@ export type PaymentItemType = {
   done_status: boolean;
   created_at: string;
   user_id: string;
+  currency: string;
 };

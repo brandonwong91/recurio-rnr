@@ -10,6 +10,12 @@ import { Repeat2 } from "lucide-react-native";
 import { EditPaymentItem } from "~/components/payment/EditPaymentItem";
 import { DatePicker } from "~/components/ui/DatePicker";
 import * as Accordion from "@rn-primitives/accordion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 const getDayDifference = (dateString: string) => {
   if (!dateString) return null;
@@ -39,10 +45,12 @@ const groupItemsByTag = (items: any[]) => {
     .map((tag) => {
       const data = grouped[tag];
       const total = data.reduce((acc, item) => acc + item.amount, 0);
+      const currency = data.length > 0 ? data[0].currency : "";
       return {
         title: tag,
         data,
         total,
+        currency,
       };
     });
 
@@ -63,6 +71,8 @@ export default function PaymentsScreen() {
   const [tag, setTag] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [frequency, setFrequency] = useState("");
+  const [currency, setCurrency] = useState("SGD");
+  const [convertedTotals, setConvertedTotals] = useState<{ [key: string]: { amount: number; currency: string } }>({});
 
   const [error, setError] = useState<string | null>(null);
   const {
@@ -90,11 +100,13 @@ export default function PaymentsScreen() {
         tag: tag.trim(),
         due_date: dueDate.trim(),
         frequency: frequency ? parseInt(frequency.trim(), 10) : 0,
+        currency: currency,
       });
       setName("");
       setAmount("");
       setTag("");
       setDueDate("");
+      setFrequency("");
       setError(null);
     }
   };
@@ -105,6 +117,33 @@ export default function PaymentsScreen() {
       setError(null);
     } else {
       setError("Amount must be a number.");
+    }
+  };
+
+  const handleCurrencyConversion = async (sectionTitle: string, amount: number, fromCurrency: string, toCurrency: string) => {
+    if (fromCurrency === toCurrency) {
+      const newConvertedTotals = { ...convertedTotals };
+      delete newConvertedTotals[sectionTitle];
+      setConvertedTotals(newConvertedTotals);
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${fromCurrency}&to=${toCurrency}`);
+      const data = await response.json();
+      if (data.rates && data.rates[toCurrency]) {
+        setConvertedTotals({
+          ...convertedTotals,
+          [sectionTitle]: {
+            amount: data.rates[toCurrency],
+            currency: toCurrency,
+          },
+        });
+      } else {
+        console.error("Failed to fetch exchange rate");
+      }
+    } catch (error) {
+      console.error("Error converting currency:", error);
     }
   };
 
@@ -153,7 +192,9 @@ export default function PaymentsScreen() {
                 {item.name}
               </Text>
               <Badge variant="secondary" className="mr-10">
-                <Text>${item.amount.toFixed(2)}</Text>
+                <Text>
+                  {item.currency} {item.amount.toFixed(2)}
+                </Text>
               </Badge>
             </View>
             <View className="flex-row items-start">
@@ -204,15 +245,50 @@ export default function PaymentsScreen() {
   const renderSectionFooter = ({
     section,
   }: {
-    section: { total: number; title: string; data: any[] };
+    section: { total: number; title: string; data: any[]; currency: string };
   }) => {
     if (section.title === "Uncategorized" && section.data.length === 0) {
       return null;
     }
+
+    const converted = convertedTotals[section.title];
+
     return (
       <View className="items-end pr-4 mt-2">
         <Separator className="my-2" />
-        <Text className="font-bold">Total: ${section.total.toFixed(2)}</Text>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <View>
+              {converted ? (
+                <Text className="font-bold">
+                  Total: {converted.currency} {converted.amount.toFixed(2)}
+                </Text>
+              ) : (
+                <Text className="font-bold">
+                  Total: {section.currency} {section.total.toFixed(2)}
+                </Text>
+              )}
+            </View>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "SGD")}>
+              <Text>SGD</Text>
+            </DropdownMenuItem>
+            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "MYR")}>
+              <Text>MYR</Text>
+            </DropdownMenuItem>
+            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "USD")}>
+              <Text>USD</Text>
+            </DropdownMenuItem>
+            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "EUR")}>
+              <Text>EUR</Text>
+            </DropdownMenuItem>
+            {/* Add an option to reset */}
+            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, section.currency)}>
+              <Text>Reset to {section.currency}</Text>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </View>
     );
   };
@@ -245,6 +321,21 @@ export default function PaymentsScreen() {
                 keyboardType="numeric"
                 onSubmitEditing={handleAddPayment}
               />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-fit ml-2">
+                    <Text>{currency}</Text>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onPress={() => setCurrency("SGD")}>
+                    <Text>SGD</Text>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onPress={() => setCurrency("MYR")}>
+                    <Text>MYR</Text>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </View>
             <TextInput
               className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"

@@ -4,6 +4,13 @@ import { View, TextInput } from "react-native";
 import { Button } from "~/components/ui/button";
 import { usePaymentStore, PaymentItemType } from "~/lib/stores/paymentStore";
 import { DatePicker } from "~/components/ui/DatePicker";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { Text } from "~/components/ui/text";
 
 type EditPaymentItemProps = {
   item: PaymentItemType;
@@ -16,6 +23,7 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
   const [tag, setTag] = useState(item.tag);
   const [dueDate, setDueDate] = useState(item.due_date);
   const [frequency, setFrequency] = useState(item.frequency?.toString() || "");
+  const [currency, setCurrency] = useState(item.currency || "SGD");
 
   const handleSave = () => {
     updatePayment({
@@ -25,6 +33,7 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
       tag,
       due_date: dueDate,
       frequency: frequency ? parseInt(frequency, 10) : 0,
+      currency: currency,
     });
   };
 
@@ -46,6 +55,21 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
           onChangeText={setAmount}
           keyboardType="numeric"
         />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-fit ml-2">
+              <Text>{currency}</Text>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onPress={() => setCurrency("SGD")}>
+              <Text>SGD</Text>
+            </DropdownMenuItem>
+            <DropdownMenuItem onPress={() => setCurrency("MYR")}>
+              <Text>MYR</Text>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </View>
       <TextInput
         className="border border-gray-300 rounded-lg p-2 mt-2 mb-2 dark:text-white"
