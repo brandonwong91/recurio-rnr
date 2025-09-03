@@ -4,6 +4,17 @@ import { View } from "react-native";
 import { Button } from "~/components/ui/button";
 import { usePaymentStore, PaymentItemType } from "~/lib/stores/paymentStore";
 import { PaymentForm, PaymentFormData } from "./PaymentForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { Text } from "~/components/ui/text";
 
 type EditPaymentItemProps = {
   item: PaymentItemType;
@@ -11,6 +22,7 @@ type EditPaymentItemProps = {
 
 export function EditPaymentItem({ item }: EditPaymentItemProps) {
   const { updatePayment, setEditingPaymentId, removePayment } = usePaymentStore();
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [paymentData, setPaymentData] = useState<PaymentFormData>({
     name: item.name,
     amount: item.amount.toString(),
@@ -38,9 +50,14 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
     setEditingPaymentId(null);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDelete = async () => {
     await removePayment(item.id);
     setEditingPaymentId(null);
+    setShowDeleteConfirmation(false);
   };
 
   return (
@@ -68,6 +85,28 @@ export function EditPaymentItem({ item }: EditPaymentItemProps) {
           </Button>
         </View>
       </View>
+      <AlertDialog
+        open={showDeleteConfirmation}
+        onOpenChange={setShowDeleteConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              payment.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancel</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction onPress={confirmDelete}>
+              <Text>Delete</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </View>
   );
 }
