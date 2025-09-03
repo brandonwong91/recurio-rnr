@@ -6,7 +6,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
-import { Repeat2 } from "lucide-react-native";
+import { Repeat2, Repeat1 } from "lucide-react-native";
 import { EditPaymentItem } from "~/components/payment/EditPaymentItem";
 import * as Accordion from "@rn-primitives/accordion";
 import {
@@ -25,7 +25,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 
 const getDayDifference = (dateString: string) => {
@@ -302,27 +301,29 @@ export default function PaymentsScreen() {
               </Badge>
             </View>
             <View className="flex-row items-start">
-              {item.due_date && (
+              <Pressable
+                onPress={() => handleUpdateDueDate(item)}
+                disabled={
+                  !(
+                    item.due_date &&
+                    item.frequency > 0 &&
+                    (getDayDifference(item.due_date) ?? 1) <= 0
+                  )
+                }
+              >
                 <Badge variant="outline" className="ml-2">
                   <Text>
                     Due: {item.due_date}
                     {item.done_status === false &&
                       ` (${getDayDifference(item.due_date)}d)`}
                   </Text>
+                  {item.due_date &&
+                    item.frequency > 0 &&
+                    (getDayDifference(item.due_date) ?? 1) <= 0 && (
+                      <Repeat1 size={16} />
+                    )}
                 </Badge>
-              )}
-              {item.due_date &&
-                item.frequency > 0 &&
-                getDayDifference(item.due_date)! <= 0 && (
-                  <Button
-                    onPress={() => handleUpdateDueDate(item)}
-                    size="sm"
-                    variant="outline"
-                    className="ml-2"
-                  >
-                    <Text>Renew</Text>
-                  </Button>
-                )}
+              </Pressable>
               {item.paid_date && item.done_status && (
                 <Badge variant="outline" className="ml-2">
                   <Text>
