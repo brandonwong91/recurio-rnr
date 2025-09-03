@@ -255,7 +255,9 @@ export default function PaymentsScreen() {
               {item.due_date && (
                 <Badge variant="outline" className="ml-2">
                   <Text>
-                    Due: {item.due_date} ({getDayDifference(item.due_date)}d)
+                    Due: {item.due_date}
+                    {item.done_status === false &&
+                      ` (${getDayDifference(item.due_date)}d)`}
                   </Text>
                 </Badge>
               )}
