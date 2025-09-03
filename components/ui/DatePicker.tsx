@@ -4,7 +4,7 @@ import { Calendar } from 'react-native-calendars';
 import { Text } from './text';
 
 type DatePickerProps = {
-  date: string;
+  date: string | null;
   onDateChange: (date: string) => void;
   placeholder?: string;
 };

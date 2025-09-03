@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   View,
-  TextInput,
   SectionList,
   Pressable,
   Dimensions,
@@ -14,7 +13,6 @@ import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
 import { Repeat2 } from "lucide-react-native";
 import { EditPaymentItem } from "~/components/payment/EditPaymentItem";
-import { DatePicker } from "~/components/ui/DatePicker";
 import * as Accordion from "@rn-primitives/accordion";
 import {
   DropdownMenu,
@@ -22,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { PaymentForm, PaymentFormData } from "~/components/payment/PaymentForm";
 
 const getDayDifference = (dateString: string) => {
   if (!dateString) return null;
@@ -72,12 +71,14 @@ const groupItemsByTag = (items: any[]) => {
 };
 
 export default function PaymentsScreen() {
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [tag, setTag] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [frequency, setFrequency] = useState("");
-  const [currency, setCurrency] = useState("SGD");
+  const [newPaymentData, setNewPaymentData] = useState<PaymentFormData>({
+    name: "",
+    amount: "",
+    tag: "",
+    due_date: "",
+    frequency: "",
+    currency: "SGD",
+  });
   const [convertedTotals, setConvertedTotals] = useState<{
     [key: string]: { amount: number; currency: string };
   }>({});
@@ -101,34 +102,30 @@ export default function PaymentsScreen() {
   }, [fetchPayments]);
 
   const handleAddPayment = () => {
-    if (name.trim() && amount.trim()) {
-      if (!/^[0-9.]+$/.test(amount.trim())) {
+    if (newPaymentData.name.trim() && newPaymentData.amount.trim()) {
+      if (!/^[0-9.]+$/.test(newPaymentData.amount.trim())) {
         setError("Amount must be a number.");
         return;
       }
       addPayment({
-        name: name.trim(),
-        amount: parseFloat(amount.trim()),
-        tag: tag.trim(),
-        due_date: dueDate.trim(),
-        frequency: frequency ? parseInt(frequency.trim(), 10) : 0,
-        currency: currency,
+        name: newPaymentData.name.trim(),
+        amount: parseFloat(newPaymentData.amount.trim()),
+        tag: newPaymentData.tag?.trim(),
+        due_date: newPaymentData.due_date?.trim(),
+        frequency: newPaymentData.frequency
+          ? parseInt(newPaymentData.frequency.trim(), 10)
+          : 0,
+        currency: newPaymentData.currency,
       });
-      setName("");
-      setAmount("");
-      setTag("");
-      setDueDate("");
-      setFrequency("");
+      setNewPaymentData({
+        name: "",
+        amount: "",
+        tag: "",
+        due_date: "",
+        frequency: "",
+        currency: "SGD",
+      });
       setError(null);
-    }
-  };
-
-  const handleAmountChange = (text: string) => {
-    if (text === "" || /^[0-9.]+$/.test(text)) {
-      setAmount(text);
-      setError(null);
-    } else {
-      setError("Amount must be a number.");
     }
   };
 
@@ -407,59 +404,12 @@ export default function PaymentsScreen() {
               </Accordion.Trigger>
             </Accordion.Header>
             <Accordion.Content>
-              <View className="flex-row my-4">
-                <TextInput
-                  className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
-                  placeholder="Payment name"
-                  value={name}
-                  onChangeText={setName}
-                  onSubmitEditing={handleAddPayment}
-                />
-                <TextInput
-                  className="w-24 border border-gray-300 rounded-lg p-2 dark:text-white"
-                  placeholder="Amount"
-                  value={amount}
-                  onChangeText={handleAmountChange}
-                  keyboardType="numeric"
-                  onSubmitEditing={handleAddPayment}
-                />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-fit ml-2">
-                      <Text>{currency}</Text>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onPress={() => setCurrency("SGD")}>
-                      <Text>SGD</Text>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onPress={() => setCurrency("MYR")}>
-                      <Text>MYR</Text>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </View>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
-                placeholder="Tag"
-                value={tag}
-                onChangeText={setTag}
-                onSubmitEditing={handleAddPayment}
+              <PaymentForm
+                payment={newPaymentData}
+                onPaymentChange={setNewPaymentData}
+                onSubmit={handleAddPayment}
               />
-              <DatePicker
-                date={dueDate}
-                onDateChange={setDueDate}
-                placeholder="Select Due Date"
-              />
-              <TextInput
-                className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
-                placeholder="Frequency (in days)"
-                value={frequency}
-                onChangeText={setFrequency}
-                keyboardType="numeric"
-                onSubmitEditing={handleAddPayment}
-              />
-              <Button onPress={handleAddPayment} className="mb-4">
+              <Button onPress={handleAddPayment} className="mt-4">
                 <Text>Add Payment</Text>
               </Button>
             </Accordion.Content>
