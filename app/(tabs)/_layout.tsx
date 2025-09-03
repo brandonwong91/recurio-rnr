@@ -60,7 +60,7 @@ export default function TabsLayout() {
                     source={{ uri: user?.user_metadata.avatar_url }}
                   />
                   <AvatarFallback>
-                    {getInitials(user?.user_metadata.full_name)}
+                    <Text>{getInitials(user?.user_metadata.full_name)}</Text>
                   </AvatarFallback>
                 </Avatar>
               </Button>

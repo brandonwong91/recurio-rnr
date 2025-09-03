@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, SectionList, Pressable, Dimensions } from "react-native";
+import { View, SectionList, Pressable, Dimensions, Alert } from "react-native";
 import { Text } from "~/components/ui/text";
 import { PaymentItemType, usePaymentStore } from "~/lib/stores/paymentStore";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -16,6 +16,17 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { PaymentForm, PaymentFormData } from "~/components/payment/PaymentForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 
 const getDayDifference = (dateString: string) => {
   if (!dateString) return null;
@@ -81,7 +92,11 @@ export default function PaymentsScreen() {
   const [selectedItemsForSum, setSelectedItemsForSum] = useState<number[]>([]);
   const [currentSum, setCurrentSum] = useState(0);
   const [sumCurrency, setSumCurrency] = useState<string | null>(null);
+  const [paymentsToRenewInDialog, setPaymentsToRenewInDialog] = useState<
+    PaymentItemType[]
+  >([]);
 
+  const [showRenewAllDialog, setShowRenewAllDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const {
     payments,
@@ -209,6 +224,25 @@ export default function PaymentsScreen() {
     });
   };
 
+  const handleRenewAllPayments = () => {
+    const paymentsToRenew = payments.filter(
+      (item) =>
+        item.due_date &&
+        item.frequency > 0 &&
+        (getDayDifference(item.due_date) ?? 1) <= 0
+    );
+
+    if (paymentsToRenew.length === 0) {
+      Alert.alert(
+        "No Payments to Renew",
+        "There are no payments with a past due date and a set frequency to renew."
+      );
+      return;
+    }
+    setPaymentsToRenewInDialog(paymentsToRenew);
+    setShowRenewAllDialog(true);
+  };
+
   const unpaidPayments = payments
     .filter((item) => !item.done_status)
     .sort((a, b) => {
@@ -301,7 +335,7 @@ export default function PaymentsScreen() {
               {item.frequency > 0 && (
                 <Badge variant="outline" className="ml-2">
                   <Repeat2 size={16} className="mr-1" />
-                  <Text>Every {item.frequency} days </Text>
+                  <Text>Every {item.frequency} days</Text>
                 </Badge>
               )}
             </View>
@@ -321,7 +355,7 @@ export default function PaymentsScreen() {
     }
     return (
       <Badge variant={"secondary"} className="mb-2">
-        {title}
+        <Text>{title}</Text>
       </Badge>
     );
   };
@@ -447,19 +481,29 @@ export default function PaymentsScreen() {
           </Accordion.Item>
         </Accordion.Root>
       </View>
-      <Button
-        onPress={() => {
-          setIsSumModeActive(!isSumModeActive);
-          if (isSumModeActive) {
-            setSelectedItemsForSum([]);
-            setCurrentSum(0);
-            setSumCurrency(null);
-          }
-        }}
-        variant={isSumModeActive ? "destructive" : "secondary"}
-      >
-        <Text>{isSumModeActive ? "End Sum" : "Start Sum"}</Text>
-      </Button>
+      <View className="flex-row justify-between items-center mb-4">
+        <Button
+          onPress={() => {
+            setIsSumModeActive(!isSumModeActive);
+            if (isSumModeActive) {
+              setSelectedItemsForSum([]);
+              setCurrentSum(0);
+              setSumCurrency(null);
+            }
+          }}
+          variant={isSumModeActive ? "destructive" : "secondary"}
+          className="flex-1 mr-2"
+        >
+          <Text>{isSumModeActive ? "End Sum" : "Start Sum"}</Text>
+        </Button>
+        <Button
+          onPress={handleRenewAllPayments}
+          variant="secondary"
+          className="flex-1 ml-2"
+        >
+          <Text>Renew All</Text>
+        </Button>
+      </View>
       {error && <Text className="text-red-500 my-2">{error}</Text>}
       {unpaidSections.length > 0 && (
         <SectionList
@@ -497,6 +541,65 @@ export default function PaymentsScreen() {
           </Text>
         </View>
       )}
+
+      <AlertDialog
+        open={showRenewAllDialog}
+        onOpenChange={setShowRenewAllDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Renewal</AlertDialogTitle>
+            <AlertDialogDescription>
+              <Text>
+                Are you sure you want to renew the following payment(s)?
+              </Text>
+              {paymentsToRenewInDialog.map((payment) => (
+                <Badge>
+                  <Text key={payment.id}>
+                    {payment.name} ({payment.currency}{" "}
+                    {payment.amount.toFixed(2)}) due on {payment.due_date}
+                  </Text>
+                </Badge>
+              ))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancel</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onPress={async () => {
+                const paymentsToRenew = payments.filter(
+                  (item) =>
+                    item.due_date &&
+                    item.frequency > 0 &&
+                    (getDayDifference(item.due_date) ?? 1) <= 0
+                );
+                for (const item of paymentsToRenew) {
+                  const currentDueDate = new Date(item.due_date!);
+                  currentDueDate.setDate(
+                    currentDueDate.getDate() + item.frequency
+                  );
+                  const newDueDate = currentDueDate.toISOString().split("T")[0];
+
+                  await updatePayment({
+                    id: item.id,
+                    due_date: newDueDate,
+                    done_status: false,
+                    paid_date: null,
+                  });
+                }
+                Alert.alert(
+                  "Renewal Complete",
+                  `${paymentsToRenew.length} payment(s) have been renewed.`
+                );
+              }}
+            >
+              <Text>Renew All</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </View>
   );
 }
