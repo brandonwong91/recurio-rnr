@@ -72,7 +72,13 @@ export default function PaymentsScreen() {
   const [dueDate, setDueDate] = useState("");
   const [frequency, setFrequency] = useState("");
   const [currency, setCurrency] = useState("SGD");
-  const [convertedTotals, setConvertedTotals] = useState<{ [key: string]: { amount: number; currency: string } }>({});
+  const [convertedTotals, setConvertedTotals] = useState<{
+    [key: string]: { amount: number; currency: string };
+  }>({});
+  const [isSumModeActive, setIsSumModeActive] = useState(false);
+  const [selectedItemsForSum, setSelectedItemsForSum] = useState<number[]>([]);
+  const [currentSum, setCurrentSum] = useState(0);
+  const [sumCurrency, setSumCurrency] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const {
@@ -120,7 +126,12 @@ export default function PaymentsScreen() {
     }
   };
 
-  const handleCurrencyConversion = async (sectionTitle: string, amount: number, fromCurrency: string, toCurrency: string) => {
+  const handleCurrencyConversion = async (
+    sectionTitle: string,
+    amount: number,
+    fromCurrency: string,
+    toCurrency: string
+  ) => {
     if (fromCurrency === toCurrency) {
       const newConvertedTotals = { ...convertedTotals };
       delete newConvertedTotals[sectionTitle];
@@ -129,7 +140,9 @@ export default function PaymentsScreen() {
     }
 
     try {
-      const response = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${fromCurrency}&to=${toCurrency}`);
+      const response = await fetch(
+        `https://api.frankfurter.app/latest?amount=${amount}&from=${fromCurrency}&to=${toCurrency}`
+      );
       const data = await response.json();
       if (data.rates && data.rates[toCurrency]) {
         setConvertedTotals({
@@ -144,6 +157,35 @@ export default function PaymentsScreen() {
       }
     } catch (error) {
       console.error("Error converting currency:", error);
+    }
+  };
+
+  const handleSumSelection = (item: any) => {
+    if (!isSumModeActive) return;
+
+    const { id, amount, currency } = item;
+
+    if (selectedItemsForSum.includes(id)) {
+      // Deselect
+      setSelectedItemsForSum(
+        selectedItemsForSum.filter((itemId) => itemId !== id)
+      );
+      setCurrentSum(currentSum - amount);
+      if (selectedItemsForSum.length === 1) {
+        setSumCurrency(null);
+      }
+    } else {
+      // Select
+      if (sumCurrency && sumCurrency !== currency) {
+        setError("You can only sum items with the same currency.");
+        setTimeout(() => setError(null), 3000); // Clear error after 3s
+        return;
+      }
+      setSelectedItemsForSum([...selectedItemsForSum, id]);
+      setCurrentSum(currentSum + amount);
+      if (!sumCurrency) {
+        setSumCurrency(currency);
+      }
     }
   };
 
@@ -177,11 +219,19 @@ export default function PaymentsScreen() {
     }
 
     return (
-      <Pressable onPress={() => setEditingPaymentId(item.id)}>
+      <Pressable
+        onPress={() => !isSumModeActive && setEditingPaymentId(item.id)}
+      >
         <View className="flex-row items-center mb-2 ml-4">
           <Checkbox
-            checked={item.done_status}
-            onCheckedChange={() => toggleDone(item.id)}
+            checked={
+              isSumModeActive
+                ? selectedItemsForSum.includes(item.id)
+                : item.done_status
+            }
+            onCheckedChange={() =>
+              isSumModeActive ? handleSumSelection(item) : toggleDone(item.id)
+            }
             className="mr-2 w-4 h-4 cursor-pointer"
           />
           <View className="flex flex-col w-full gap-2">
@@ -271,20 +321,65 @@ export default function PaymentsScreen() {
             </View>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "SGD")}>
+            <DropdownMenuItem
+              onPress={() =>
+                handleCurrencyConversion(
+                  section.title,
+                  section.total,
+                  section.currency,
+                  "SGD"
+                )
+              }
+            >
               <Text>SGD</Text>
             </DropdownMenuItem>
-            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "MYR")}>
+            <DropdownMenuItem
+              onPress={() =>
+                handleCurrencyConversion(
+                  section.title,
+                  section.total,
+                  section.currency,
+                  "MYR"
+                )
+              }
+            >
               <Text>MYR</Text>
             </DropdownMenuItem>
-            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "USD")}>
+            <DropdownMenuItem
+              onPress={() =>
+                handleCurrencyConversion(
+                  section.title,
+                  section.total,
+                  section.currency,
+                  "USD"
+                )
+              }
+            >
               <Text>USD</Text>
             </DropdownMenuItem>
-            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, "EUR")}>
+            <DropdownMenuItem
+              onPress={() =>
+                handleCurrencyConversion(
+                  section.title,
+                  section.total,
+                  section.currency,
+                  "EUR"
+                )
+              }
+            >
               <Text>EUR</Text>
             </DropdownMenuItem>
             {/* Add an option to reset */}
-            <DropdownMenuItem onPress={() => handleCurrencyConversion(section.title, section.total, section.currency, section.currency)}>
+            <DropdownMenuItem
+              onPress={() =>
+                handleCurrencyConversion(
+                  section.title,
+                  section.total,
+                  section.currency,
+                  section.currency
+                )
+              }
+            >
               <Text>Reset to {section.currency}</Text>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -295,74 +390,89 @@ export default function PaymentsScreen() {
 
   return (
     <View className="flex flex-col flex-1 p-4 max-w-sm mx-auto">
-      <Accordion.Root type="single" collapsible>
-        <Accordion.Item value="item-1">
-          <Accordion.Header>
-            <Accordion.Trigger className="w-full">
-              <View className="flex-row justify-between items-center p-2 border rounded-lg mb-4 text-center">
-                <Text className="font-bold text-center">Add Payment</Text>
+      <View className="flex-row justify-between items-center mb-4">
+        <Accordion.Root type="single" collapsible className="flex-1">
+          <Accordion.Item value="item-1">
+            <Accordion.Header>
+              <Accordion.Trigger className="w-full">
+                <View className="flex-row justify-between items-center p-2 border rounded-lg text-center">
+                  <Text className="font-bold text-center">Add Payment</Text>
+                </View>
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content>
+              <View className="flex-row my-4">
+                <TextInput
+                  className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
+                  placeholder="Payment name"
+                  value={name}
+                  onChangeText={setName}
+                  onSubmitEditing={handleAddPayment}
+                />
+                <TextInput
+                  className="w-24 border border-gray-300 rounded-lg p-2 dark:text-white"
+                  placeholder="Amount"
+                  value={amount}
+                  onChangeText={handleAmountChange}
+                  keyboardType="numeric"
+                  onSubmitEditing={handleAddPayment}
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-fit ml-2">
+                      <Text>{currency}</Text>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onPress={() => setCurrency("SGD")}>
+                      <Text>SGD</Text>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onPress={() => setCurrency("MYR")}>
+                      <Text>MYR</Text>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </View>
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Content>
-            <View className="flex-row mb-4">
               <TextInput
-                className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
-                placeholder="Payment name"
-                value={name}
-                onChangeText={setName}
+                className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
+                placeholder="Tag"
+                value={tag}
+                onChangeText={setTag}
                 onSubmitEditing={handleAddPayment}
               />
+              <DatePicker
+                date={dueDate}
+                onDateChange={setDueDate}
+                placeholder="Select Due Date"
+              />
               <TextInput
-                className="w-24 border border-gray-300 rounded-lg p-2 dark:text-white"
-                placeholder="Amount"
-                value={amount}
-                onChangeText={handleAmountChange}
+                className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
+                placeholder="Frequency (in days)"
+                value={frequency}
+                onChangeText={setFrequency}
                 keyboardType="numeric"
                 onSubmitEditing={handleAddPayment}
               />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-fit ml-2">
-                    <Text>{currency}</Text>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onPress={() => setCurrency("SGD")}>
-                    <Text>SGD</Text>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onPress={() => setCurrency("MYR")}>
-                    <Text>MYR</Text>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </View>
-            <TextInput
-              className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
-              placeholder="Tag"
-              value={tag}
-              onChangeText={setTag}
-              onSubmitEditing={handleAddPayment}
-            />
-            <DatePicker
-              date={dueDate}
-              onDateChange={setDueDate}
-              placeholder="Select Due Date"
-            />
-            <TextInput
-              className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
-              placeholder="Frequency (in days)"
-              value={frequency}
-              onChangeText={setFrequency}
-              keyboardType="numeric"
-              onSubmitEditing={handleAddPayment}
-            />
-            <Button onPress={handleAddPayment} className="mb-4">
-              <Text>Add Payment</Text>
-            </Button>
-          </Accordion.Content>
-        </Accordion.Item>
-      </Accordion.Root>
+              <Button onPress={handleAddPayment} className="mb-4">
+                <Text>Add Payment</Text>
+              </Button>
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion.Root>
+      </View>
+      <Button
+        onPress={() => {
+          setIsSumModeActive(!isSumModeActive);
+          if (isSumModeActive) {
+            setSelectedItemsForSum([]);
+            setCurrentSum(0);
+            setSumCurrency(null);
+          }
+        }}
+        variant={isSumModeActive ? "destructive" : "secondary"}
+      >
+        <Text>{isSumModeActive ? "End Sum" : "Start Sum"}</Text>
+      </Button>
       {error && <Text className="text-red-500 my-2">{error}</Text>}
       <SectionList
         sections={unpaidSections}
@@ -385,6 +495,13 @@ export default function PaymentsScreen() {
             renderSectionFooter={renderSectionFooter}
           />
         </>
+      )}
+      {isSumModeActive && (
+        <View className="absolute bottom-4 right-4 bg-primary p-4 rounded-lg shadow-lg">
+          <Text className="text-primary-foreground font-bold">
+            Sum: {sumCurrency} {currentSum.toFixed(2)}
+          </Text>
+        </View>
       )}
     </View>
   );
