@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  View,
-  SectionList,
-  Pressable,
-  Dimensions,
-} from "react-native";
+import { View, SectionList, Pressable, Dimensions } from "react-native";
 import { Text } from "~/components/ui/text";
 import { usePaymentStore } from "~/lib/stores/paymentStore";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -110,8 +105,14 @@ export default function PaymentsScreen() {
       addPayment({
         name: newPaymentData.name.trim(),
         amount: parseFloat(newPaymentData.amount.trim()),
-        tag: newPaymentData.tag?.trim(),
-        due_date: newPaymentData.due_date?.trim(),
+        tag:
+          newPaymentData.tag && newPaymentData.tag.trim() !== ""
+            ? newPaymentData.tag.trim()
+            : null,
+        due_date:
+          newPaymentData.due_date && newPaymentData.due_date.trim() !== ""
+            ? newPaymentData.due_date.trim()
+            : null,
         frequency: newPaymentData.frequency
           ? parseInt(newPaymentData.frequency.trim(), 10)
           : 0,

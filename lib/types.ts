@@ -2,8 +2,8 @@ export type PaymentItemType = {
   id: string;
   name: string;
   amount: number;
-  tag: string;
-  due_date: string;
+  tag: string | null;
+  due_date: string | null;
   paid_date: string | null;
   frequency: number;
   done_status: boolean;

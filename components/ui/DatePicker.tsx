@@ -35,9 +35,9 @@ export function DatePicker({ date, onDateChange, placeholder }: DatePickerProps)
           <View className="bg-card rounded-lg w-11/12">
             <Calendar
               onDayPress={handleDayPress}
-              markedDates={{
+              markedDates={date ? {
                 [date]: { selected: true, selectedColor: '#00adf5' },
-              }}
+              } : {}}
             />
           </View>
         </View>
