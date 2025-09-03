@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { View, TextInput, SectionList, Pressable } from "react-native";
+import {
+  View,
+  TextInput,
+  SectionList,
+  Pressable,
+  Dimensions,
+} from "react-native";
 import { Text } from "~/components/ui/text";
 import { usePaymentStore } from "~/lib/stores/paymentStore";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -480,12 +486,17 @@ export default function PaymentsScreen() {
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         renderSectionFooter={renderSectionFooter}
+        style={{
+          minHeight: Dimensions.get("window").height / 4,
+          paddingTop: 8,
+        }}
       />
       {paidPayments.length > 0 && (
         <>
-          <Separator className="my-4" />
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-lg font-bold">Paid</Text>
+          <View className="flex-row items-center my-4">
+            <Separator className="flex-1" />
+            <Text className="mx-4 text-lg font-bold">Paid</Text>
+            <Separator className="flex-1" />
           </View>
           <SectionList
             sections={paidSections}
