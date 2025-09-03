@@ -431,17 +431,19 @@ export default function PaymentsScreen() {
         <Text>{isSumModeActive ? "End Sum" : "Start Sum"}</Text>
       </Button>
       {error && <Text className="text-red-500 my-2">{error}</Text>}
-      <SectionList
-        sections={unpaidSections}
-        keyExtractor={(item, index) => item.id.toString() + index}
-        renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
-        renderSectionFooter={renderSectionFooter}
-        style={{
-          minHeight: Dimensions.get("window").height / 4,
-          paddingTop: 8,
-        }}
-      />
+      {unpaidSections.length > 0 && (
+        <SectionList
+          sections={unpaidSections}
+          keyExtractor={(item, index) => item.id.toString() + index}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          renderSectionFooter={renderSectionFooter}
+          style={{
+            minHeight: Dimensions.get("window").height / 4,
+            paddingTop: 8,
+          }}
+        />
+      )}
       {paidPayments.length > 0 && (
         <>
           <View className="flex-row items-center my-4">
