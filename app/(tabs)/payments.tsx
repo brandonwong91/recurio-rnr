@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, SectionList, Pressable, Dimensions } from "react-native";
 import { Text } from "~/components/ui/text";
-import { usePaymentStore } from "~/lib/stores/paymentStore";
+import { PaymentItemType, usePaymentStore } from "~/lib/stores/paymentStore";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
@@ -90,6 +90,7 @@ export default function PaymentsScreen() {
     editingPaymentId,
     setEditingPaymentId,
     fetchPayments,
+    updatePayment,
   } = usePaymentStore();
 
   useEffect(() => {
@@ -193,6 +194,21 @@ export default function PaymentsScreen() {
     }
   };
 
+  const handleUpdateDueDate = async (item: PaymentItemType) => {
+    if (!item.due_date || item.frequency <= 0) return;
+
+    const currentDueDate = new Date(item.due_date);
+    currentDueDate.setDate(currentDueDate.getDate() + item.frequency);
+    const newDueDate = currentDueDate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
+
+    await updatePayment({
+      id: item.id,
+      due_date: newDueDate,
+      done_status: false,
+      paid_date: null,
+    });
+  };
+
   const unpaidPayments = payments
     .filter((item) => !item.done_status)
     .sort((a, b) => {
@@ -261,6 +277,18 @@ export default function PaymentsScreen() {
                   </Text>
                 </Badge>
               )}
+              {item.due_date &&
+                item.frequency > 0 &&
+                getDayDifference(item.due_date)! <= 0 && (
+                  <Button
+                    onPress={() => handleUpdateDueDate(item)}
+                    size="sm"
+                    variant="outline"
+                    className="ml-2"
+                  >
+                    <Text>Renew</Text>
+                  </Button>
+                )}
               {item.paid_date && item.done_status && (
                 <Badge variant="outline" className="ml-2">
                   <Text>
@@ -395,7 +423,7 @@ export default function PaymentsScreen() {
   };
 
   return (
-    <View className="flex flex-col flex-1 p-4 max-w-sm mx-auto">
+    <View className="flex flex-col flex-1 p-4 max-w-md w-full mx-auto">
       <View className="flex-row justify-between items-center mb-4">
         <Accordion.Root type="single" collapsible className="flex-1">
           <Accordion.Item value="item-1">
@@ -406,7 +434,7 @@ export default function PaymentsScreen() {
                 </View>
               </Accordion.Trigger>
             </Accordion.Header>
-            <Accordion.Content>
+            <Accordion.Content className="mt-4">
               <PaymentForm
                 payment={newPaymentData}
                 onPaymentChange={setNewPaymentData}

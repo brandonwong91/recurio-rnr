@@ -50,8 +50,8 @@ export function PaymentForm({
           onSubmitEditing={onSubmit}
         />
         <TextInput
-          className="w-24 border border-gray-300 rounded-lg p-2 dark:text-white"
-          placeholder="Amount"
+          className="w-16 border border-gray-300 rounded-lg p-2 dark:text-white"
+          placeholder="Amt"
           value={payment.amount}
           onChangeText={handleAmountChange}
           keyboardType="numeric"
@@ -59,7 +59,7 @@ export function PaymentForm({
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-fit ml-2">
+            <Button variant="outline" size={"sm"} className="w-fit ml-2">
               <Text>{payment.currency}</Text>
             </Button>
           </DropdownMenuTrigger>
