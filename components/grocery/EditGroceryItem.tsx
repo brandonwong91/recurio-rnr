@@ -1,9 +1,19 @@
-import { Check, X } from "lucide-react-native";
+import { Check, X, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import { View, TextInput } from "react-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { useGroceryStore } from "~/lib/stores/groceryStore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 
 type EditGroceryItemProps = {
   item: {
@@ -15,10 +25,11 @@ type EditGroceryItemProps = {
 };
 
 export function EditGroceryItem({ item }: EditGroceryItemProps) {
-  const { updateItem, setEditingItemId } = useGroceryStore();
+  const { updateItem, setEditingItemId, removeItem } = useGroceryStore();
   const [name, setName] = useState(item.name);
   const [quantity, setQuantity] = useState(item.quantity?.toString() || "");
   const [tags, setTags] = useState(item.tags?.join(", ") || "");
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   const handleSave = () => {
     const q = quantity.trim() ? parseInt(quantity.trim(), 10) : undefined;
@@ -31,6 +42,16 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
 
   const handleCancel = () => {
     setEditingItemId(null);
+  };
+
+  const handleDelete = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDelete = async () => {
+    await removeItem(item.id);
+    setEditingItemId(null);
+    setShowDeleteConfirmation(false);
   };
 
   return (
@@ -54,19 +75,46 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
         value={tags}
         onChangeText={setTags}
       />
-      <View className="flex-row justify-end mt-2">
-        <Button onPress={handleSave} size="sm" variant={"ghost"}>
-          <Check size={16} color={"green"} />
+      <View className="flex-row justify-between mt-2">
+        <Button onPress={handleDelete} size="sm" variant={"ghost"}>
+          <Trash2 size={16} color={"red"} />
         </Button>
-        <Button
-          onPress={handleCancel}
-          variant="ghost"
-          size="sm"
-          className="ml-2"
-        >
-          <X size={16} color={"red"} />
-        </Button>
+        <View className="flex-row">
+          <Button onPress={handleSave} size="sm" variant={"ghost"}>
+            <Check size={16} color={"green"} />
+          </Button>
+          <Button
+            onPress={handleCancel}
+            variant="ghost"
+            size="sm"
+            className="ml-2"
+          >
+            <X size={16} color={"red"} />
+          </Button>
+        </View>
       </View>
+      <AlertDialog
+        open={showDeleteConfirmation}
+        onOpenChange={setShowDeleteConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              item.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancel</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction onPress={confirmDelete}>
+              <Text>Delete</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </View>
   );
 }

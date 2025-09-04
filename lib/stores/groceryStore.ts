@@ -30,6 +30,7 @@ type GroceryState = {
     quantity?: number,
     tags?: string[]
   ) => Promise<void>;
+  removeItem: (id: number) => Promise<void>;
   setItems: (items: GroceryItem[]) => void;
 };
 
@@ -91,6 +92,12 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
         editingItemId: null,
       }));
     }
+  },
+  removeItem: async (id) => {
+    await deleteGroceryItem(id);
+    set((state) => ({
+      items: state.items.filter((i) => i.id !== id),
+    }));
   },
   setItems: (items) => set({ items }),
 }));
