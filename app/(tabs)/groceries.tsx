@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
-import { View, TextInput, SectionList, Pressable } from "react-native";
+import { useEffect } from "react";
+import { View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useGroceryStore } from "~/lib/stores/groceryStore";
-import { Checkbox } from "~/components/ui/checkbox";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
-import { Badge } from "~/components/ui/badge";
-import { EditGroceryItem } from "~/components/grocery/EditGroceryItem";
 import { ListPlus } from "lucide-react-native";
+import { AddGroceryForm } from "~/components/grocery/AddGroceryForm";
+import { GroceryList } from "~/components/grocery/GroceryList";
 
 const groupItemsByTag = (items: any[]) => {
   const grouped: { [key: string]: any[] } = { Uncategorized: [] };
@@ -45,51 +44,11 @@ const groupItemsByTag = (items: any[]) => {
 };
 
 export default function GroceriesScreen() {
-  const [newItem, setNewItem] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [tags, setTags] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const {
-    items,
-    addItem,
-    toggleItem,
-    uncheckAll,
-    editingItemId,
-    setEditingItemId,
-    fetchItems,
-  } = useGroceryStore();
+  const { items, uncheckAll, fetchItems } = useGroceryStore();
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
-
-  const handleAddItem = () => {
-    if (newItem.trim()) {
-      if (quantity.trim() && !/^[0-9]+$/.test(quantity.trim())) {
-        setError("Quantity must be a number.");
-        return;
-      }
-      const q = quantity.trim() ? parseInt(quantity.trim(), 10) : undefined;
-      const newTags = tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag);
-      addItem(newItem.trim(), q, newTags);
-      setNewItem("");
-      setQuantity("");
-      setTags("");
-      setError(null);
-    }
-  };
-
-  const handleQuantityChange = (text: string) => {
-    if (text === "" || /^[0-9]+$/.test(text)) {
-      setQuantity(text);
-      setError(null);
-    } else {
-      setError("Quantity must be a number.");
-    }
-  };
 
   const uncheckedItems = items.filter((item) => !item.done);
   const checkedItems = items.filter((item) => item.done);
@@ -97,85 +56,10 @@ export default function GroceriesScreen() {
   const uncheckedSections = groupItemsByTag(uncheckedItems);
   const checkedSections = groupItemsByTag(checkedItems);
 
-  const renderItem = ({ item }: { item: any }) => {
-    if (item.id === editingItemId) {
-      return <EditGroceryItem item={item} />;
-    }
-
-    return (
-      <Pressable onPress={() => setEditingItemId(item.id)}>
-        <View className="flex-row items-center mb-2 ml-4">
-          <Checkbox
-            checked={item.done}
-            onCheckedChange={() => toggleItem(item.id)}
-            className="mr-2 w-4 h-4 cursor-pointer"
-          />
-          <View className="flex-row items-center">
-            <Text className={`ml-2 ${item.done ? "line-through" : ""}`}>
-              {item.name}
-            </Text>
-            {item.quantity && (
-              <Badge variant="secondary" className="ml-2">
-                <Text>{item.quantity}</Text>
-              </Badge>
-            )}
-          </View>
-        </View>
-      </Pressable>
-    );
-  };
-
-  const renderSectionHeader = ({
-    section: { title },
-  }: {
-    section: { title: string };
-  }) => {
-    if (title === "Uncategorized") {
-      return null;
-    }
-    return (
-      <Badge variant={"secondary"} className="mb-2">
-        {title}
-      </Badge>
-    );
-  };
-
   return (
     <View className="flex flex-col p-4 max-w-sm mx-auto">
-      <View className="flex-row mb-4">
-        <TextInput
-          className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
-          placeholder="Add new item"
-          value={newItem}
-          onChangeText={setNewItem}
-          onSubmitEditing={handleAddItem}
-        />
-        <TextInput
-          className="w-16 border border-gray-300 rounded-lg p-2 dark:text-white"
-          placeholder="Qty"
-          value={quantity}
-          onChangeText={handleQuantityChange}
-          keyboardType="numeric"
-          onSubmitEditing={handleAddItem}
-        />
-      </View>
-      <TextInput
-        className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
-        placeholder="Tags (comma separated)"
-        value={tags}
-        onChangeText={setTags}
-        onSubmitEditing={handleAddItem}
-      />
-      <Button onPress={handleAddItem} className="mb-4">
-        <Text>Add</Text>
-      </Button>
-      {error && <Text className="text-red-500 my-2">{error}</Text>}
-      <SectionList
-        sections={uncheckedSections}
-        keyExtractor={(item, index) => item.id.toString() + index}
-        renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
-      />
+      <AddGroceryForm />
+      <GroceryList sections={uncheckedSections} />
       {checkedItems.length > 0 && (
         <>
           <Separator className="my-4" />
@@ -192,12 +76,7 @@ export default function GroceriesScreen() {
               </Button>
             </View>
           </View>
-          <SectionList
-            sections={checkedSections}
-            keyExtractor={(item, index) => item.id.toString() + index}
-            renderItem={renderItem}
-            renderSectionHeader={renderSectionHeader}
-          />
+          <GroceryList sections={checkedSections} />
         </>
       )}
     </View>
