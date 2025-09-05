@@ -458,7 +458,7 @@ export default function PaymentsScreen() {
   };
 
   return (
-    <View className="flex flex-col flex-1 p-4 max-w-md w-full mx-auto">
+    <View className="flex flex-col flex-1 p-4 max-w-md w-full mx-auto bg-secondary/30">
       <View className="flex-row justify-between items-center mb-4">
         <Accordion.Root type="single" collapsible className="flex-1">
           <Accordion.Item value="item-1">

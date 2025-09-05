@@ -93,7 +93,7 @@ export default function GroceriesScreen() {
   };
 
   return (
-    <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full">
+    <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full bg-secondary/30y">
       <View className="flex-row justify-between items-center mb-4">
         <Accordion.Root type="single" collapsible className="flex-1">
           <Accordion.Item value="item-1">
@@ -134,13 +134,15 @@ export default function GroceriesScreen() {
           <AlertDialogHeader>
             <AlertDialogTitle>Renew Items</AlertDialogTitle>
             <AlertDialogDescription>
-              The following items are ready to be renewed. Do you want to add them
-              back to your grocery list?
+              The following items are ready to be renewed. Do you want to add
+              them back to your grocery list?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <View className="py-4">
             {renewableItems.map((item) => (
-              <Text key={item.id} className="font-semibold">- {item.name}</Text>
+              <Text key={item.id} className="font-semibold">
+                - {item.name}
+              </Text>
             ))}
           </View>
           <AlertDialogFooter>
@@ -153,7 +155,10 @@ export default function GroceriesScreen() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <Toast message={frequencyToastMessage!} visible={!!frequencyToastMessage} />
+      <Toast
+        message={frequencyToastMessage!}
+        visible={!!frequencyToastMessage}
+      />
     </View>
   );
 }
