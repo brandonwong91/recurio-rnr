@@ -32,6 +32,7 @@ type GroceryState = {
   editingItemId: number | null;
   isRenewableDialogOpen: boolean;
   renewableItems: GroceryItem[];
+  frequencyToastMessage: string | null;
   fetchItems: () => Promise<void>;
   addItem: (
     name: string,
@@ -54,6 +55,7 @@ type GroceryState = {
   ) => Promise<void>;
   removeItem: (id: number) => Promise<void>;
   setItems: (items: GroceryItem[]) => void;
+  clearFrequencyToast: () => void;
 };
 
 export const useGroceryStore = create<GroceryState>((set, get) => ({
@@ -61,6 +63,7 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
   editingItemId: null,
   isRenewableDialogOpen: false,
   renewableItems: [],
+  frequencyToastMessage: null,
   fetchItems: async () => {
     const items = await getGroceryItems();
     set({ items });
@@ -74,14 +77,25 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
   toggleItem: async (id) => {
     const item = get().items.find((i) => i.id === id);
     if (item) {
+      let frequency = item.frequency;
+      let toastMessage: string | null = null;
+      if (!item.done && item.checkedAt) {
+        const diffTime = Math.abs(new Date().getTime() - new Date(item.checkedAt).getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        frequency = diffDays;
+        toastMessage = `Frequency set to ${diffDays} days.`;
+      }
+
       const updatedItem = {
         ...item,
         done: !item.done,
         checkedAt: !item.done ? new Date() : null,
+        frequency,
       };
       await updateGroceryItem(updatedItem);
       set((state) => ({
         items: state.items.map((i) => (i.id === id ? updatedItem : i)),
+        frequencyToastMessage: toastMessage,
       }));
     }
   },
@@ -130,4 +144,5 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
     }));
   },
   setItems: (items) => set({ items }),
+  clearFrequencyToast: () => set({ frequencyToastMessage: null }),
 }));

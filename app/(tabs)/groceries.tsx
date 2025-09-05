@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import { Toast } from "~/components/ui/toast";
 
 const groupItemsByTag = (items: any[]) => {
   const grouped: { [key: string]: any[] } = { Uncategorized: [] };
@@ -63,11 +64,22 @@ export default function GroceriesScreen() {
     showRenewableDialog,
     hideRenewableDialog,
     renewItems,
+    frequencyToastMessage,
+    clearFrequencyToast,
   } = useGroceryStore();
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  useEffect(() => {
+    if (frequencyToastMessage) {
+      const timer = setTimeout(() => {
+        clearFrequencyToast();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [frequencyToastMessage, clearFrequencyToast]);
 
   const uncheckedItems = items.filter((item) => !item.done);
   const checkedItems = items.filter((item) => item.done);
@@ -81,7 +93,7 @@ export default function GroceriesScreen() {
   };
 
   return (
-    <View className="flex flex-col p-4 max-w-md mx-auto w-full">
+    <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full">
       <View className="flex-row justify-between items-center mb-4">
         <Accordion.Root type="single" collapsible className="flex-1">
           <Accordion.Item value="item-1">
@@ -141,6 +153,7 @@ export default function GroceriesScreen() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Toast message={frequencyToastMessage!} visible={!!frequencyToastMessage} />
     </View>
   );
 }
