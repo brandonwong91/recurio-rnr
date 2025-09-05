@@ -36,6 +36,19 @@ export function GroceryList({ sections }: GroceryListProps) {
       return `${month}-${day}`;
     };
 
+    const isRenewable = () => {
+      if (item.done && item.checkedAt && item.frequency) {
+        const checkedDate = new Date(item.checkedAt);
+        const renewalDate = new Date(
+          checkedDate.getTime() + item.frequency * 24 * 60 * 60 * 1000
+        );
+        return new Date() > renewalDate;
+      }
+      return false;
+    };
+
+    const renewable = isRenewable();
+
     return (
       <Pressable onPress={() => setEditingItemId(item.id)}>
         <View className="flex-row items-center mb-2 ml-4">
@@ -54,13 +67,24 @@ export function GroceryList({ sections }: GroceryListProps) {
                   <Text>{item.quantity}</Text>
                 </Badge>
               )}
-              {item.frequency && (
-                <View className="flex-row items-center ml-2">
-                  <Repeat size={12} color="gray" />
-                  <Text className="ml-1 text-xs text-gray-500">
-                    {item.frequency} days
-                  </Text>
-                </View>
+              {renewable ? (
+                <Pressable onPress={() => toggleItem(item.id)}>
+                  <Badge
+                    variant="outline"
+                    className="ml-2 animate-pulse border-green-500"
+                  >
+                    <Repeat size={12} color="green" />
+                  </Badge>
+                </Pressable>
+              ) : (
+                item.frequency && (
+                  <View className="flex-row items-center ml-2">
+                    <Repeat size={12} color="gray" />
+                    <Text className="ml-1 text-xs text-gray-500">
+                      {item.frequency} days
+                    </Text>
+                  </View>
+                )
               )}
             </View>
             {item.done && item.checkedAt && (
