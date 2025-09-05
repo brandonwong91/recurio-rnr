@@ -1,4 +1,3 @@
-
 import { SectionList, View, Pressable } from "react-native";
 import { Repeat } from "lucide-react-native";
 import { Text } from "~/components/ui/text";
@@ -32,7 +31,7 @@ export function GroceryList({ sections }: GroceryListProps) {
     const formatDate = (date: Date | null) => {
       if (!date) return null;
       const d = new Date(date);
-      const month = d.toLocaleString('default', { month: 'short' });
+      const month = d.toLocaleString("default", { month: "short" });
       const day = d.getDate();
       return `${month}-${day}`;
     };
@@ -85,7 +84,7 @@ export function GroceryList({ sections }: GroceryListProps) {
     }
     return (
       <Badge variant={"secondary"} className="mb-2">
-        {title}
+        <Text>{title}</Text>
       </Badge>
     );
   };
