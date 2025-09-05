@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useGroceryStore } from "~/lib/stores/groceryStore";
@@ -7,6 +7,7 @@ import { Separator } from "~/components/ui/separator";
 import { ListPlus } from "lucide-react-native";
 import { AddGroceryForm } from "~/components/grocery/AddGroceryForm";
 import { GroceryList } from "~/components/grocery/GroceryList";
+import * as Accordion from "@rn-primitives/accordion";
 
 const groupItemsByTag = (items: any[]) => {
   const grouped: { [key: string]: any[] } = { Uncategorized: [] };
@@ -57,20 +58,36 @@ export default function GroceriesScreen() {
   const checkedSections = groupItemsByTag(checkedItems);
 
   return (
-    <View className="flex flex-col p-4 max-w-sm mx-auto">
-      <AddGroceryForm />
-      <GroceryList sections={uncheckedSections} />
+    <View className="flex flex-col p-4 max-w-md mx-auto w-full">
+      <View className="flex-row justify-between items-center mb-4">
+        <Accordion.Root type="single" collapsible className="flex-1">
+          <Accordion.Item value="item-1">
+            <Accordion.Header>
+              <Accordion.Trigger className="w-full">
+                <View className="flex-row justify-between items-center p-2 border rounded-lg text-center">
+                  <Text className="font-bold text-center">Add Grocery</Text>
+                </View>
+              </Accordion.Trigger>
+            </Accordion.Header>
+
+            <Accordion.Content className="mt-4">
+              <AddGroceryForm />
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion.Root>
+      </View>
+
+      <View>
+        <GroceryList sections={uncheckedSections} />
+      </View>
+
       {checkedItems.length > 0 && (
         <>
-          <View className="flex-row items-center my-4">
+          <View className="flex-row items-center my-2">
             <Separator className="flex-1" />
             <Text className="text-lg font-bold mx-2">Checked Items</Text>
             <Separator className="flex-1" />
-            <Button
-              onPress={uncheckAll}
-              variant="ghost"
-              size="sm"
-            >
+            <Button onPress={uncheckAll} variant="ghost" size="sm">
               <ListPlus size={16} />
             </Button>
           </View>
