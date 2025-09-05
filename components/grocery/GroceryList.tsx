@@ -7,7 +7,7 @@ import { EditGroceryItem } from "./EditGroceryItem";
 import { useGroceryStore } from "~/lib/stores/groceryStore";
 
 interface GroceryItem {
-  id: string;
+  id: number;
   name: string;
   quantity?: number;
   done: boolean;

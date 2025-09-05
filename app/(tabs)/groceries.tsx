@@ -62,19 +62,17 @@ export default function GroceriesScreen() {
       <GroceryList sections={uncheckedSections} />
       {checkedItems.length > 0 && (
         <>
-          <Separator className="my-4" />
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-lg font-bold">Checked Items</Text>
-            <View className="flex-row">
-              <Button
-                onPress={uncheckAll}
-                variant="ghost"
-                size="sm"
-                className="ml-2"
-              >
-                <ListPlus size={16} />
-              </Button>
-            </View>
+          <View className="flex-row items-center my-4">
+            <Separator className="flex-1" />
+            <Text className="text-lg font-bold mx-2">Checked Items</Text>
+            <Separator className="flex-1" />
+            <Button
+              onPress={uncheckAll}
+              variant="ghost"
+              size="sm"
+            >
+              <ListPlus size={16} />
+            </Button>
           </View>
           <GroceryList sections={checkedSections} />
         </>
