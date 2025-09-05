@@ -13,13 +13,14 @@ type GroceryItem = {
   tags?: string[];
   done: boolean;
   checkedAt: Date | null;
+  frequency?: number;
 };
 
 type GroceryState = {
   items: GroceryItem[];
   editingItemId: number | null;
   fetchItems: () => Promise<void>;
-  addItem: (name: string, quantity?: number, tags?: string[]) => Promise<void>;
+  addItem: (name: string, quantity?: number, tags?: string[], frequency?: number) => Promise<void>;
   toggleItem: (id: number) => Promise<void>;
   uncheckAll: () => Promise<void>;
   clearChecked: () => Promise<void>;
@@ -28,7 +29,8 @@ type GroceryState = {
     id: number,
     name: string,
     quantity?: number,
-    tags?: string[]
+    tags?: string[],
+    frequency?: number
   ) => Promise<void>;
   removeItem: (id: number) => Promise<void>;
   setItems: (items: GroceryItem[]) => void;
@@ -41,8 +43,8 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
     const items = await getGroceryItems();
     set({ items });
   },
-  addItem: async (name, quantity, tags) => {
-    const newItem = await addGroceryItem({ name, quantity, tags });
+  addItem: async (name, quantity, tags, frequency) => {
+    const newItem = await addGroceryItem({ name, quantity, tags, frequency });
     if (newItem) {
       set((state) => ({ items: [...state.items, newItem] }));
     }
@@ -82,10 +84,10 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
     set((state) => ({ items: state.items.filter((item) => !item.done) }));
   },
   setEditingItemId: (id) => set({ editingItemId: id }),
-  updateItem: async (id, name, quantity, tags) => {
+  updateItem: async (id, name, quantity, tags, frequency) => {
     const item = get().items.find((i) => i.id === id);
     if (item) {
-      const updatedItem = { ...item, name, quantity, tags };
+      const updatedItem = { ...item, name, quantity, tags, frequency };
       await updateGroceryItem(updatedItem);
       set((state) => ({
         items: state.items.map((i) => (i.id === id ? updatedItem : i)),

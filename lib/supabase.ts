@@ -139,6 +139,7 @@ export async function getGroceryItems() {
       quantity,
       done,
       checked_at,
+      frequency,
       tags (id, name)
     `);
 
@@ -155,7 +156,7 @@ export async function getGroceryItems() {
   }));
 }
 
-export async function addGroceryItem(item: { name: string, quantity?: number, tags?: string[] }) {
+export async function addGroceryItem(item: { name: string, quantity?: number, tags?: string[], frequency?: number }) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     console.error('User not authenticated');
@@ -194,6 +195,7 @@ export async function addGroceryItem(item: { name: string, quantity?: number, ta
       name: item.name,
       quantity: item.quantity,
       user_id: user.id,
+      frequency: item.frequency,
     })
     .select('id')
     .single();
@@ -220,7 +222,7 @@ export async function addGroceryItem(item: { name: string, quantity?: number, ta
   return { ...item, id: newItem.id, done: false, checkedAt: null };
 }
 
-export async function updateGroceryItem(item: { id: number, name: string, quantity?: number, tags?: string[], done: boolean, checkedAt: Date | null }) {
+export async function updateGroceryItem(item: { id: number, name: string, quantity?: number, tags?: string[], done: boolean, checkedAt: Date | null, frequency?: number }) {
   // 1. Update the item itself
   const { error: updateError } = await supabase
     .from('grocery_items')
@@ -229,6 +231,7 @@ export async function updateGroceryItem(item: { id: number, name: string, quanti
       quantity: item.quantity,
       done: item.done,
       checked_at: item.checkedAt,
+      frequency: item.frequency,
     })
     .eq('id', item.id);
 

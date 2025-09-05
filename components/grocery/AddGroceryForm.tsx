@@ -9,6 +9,7 @@ export function AddGroceryForm() {
   const [newItem, setNewItem] = useState("");
   const [quantity, setQuantity] = useState("");
   const [tags, setTags] = useState("");
+  const [frequency, setFrequency] = useState("");
   const [error, setError] = useState<string | null>(null);
   const addItem = useGroceryStore((state) => state.addItem);
 
@@ -18,15 +19,21 @@ export function AddGroceryForm() {
         setError("Quantity must be a number.");
         return;
       }
+      if (frequency.trim() && !/^[0-9]+$/.test(frequency.trim())) {
+        setError("Frequency must be a number.");
+        return;
+      }
       const q = quantity.trim() ? parseInt(quantity.trim(), 10) : undefined;
+      const f = frequency.trim() ? parseInt(frequency.trim(), 10) : undefined;
       const newTags = tags
         .split(",")
         .map((tag) => tag.trim())
         .filter((tag) => tag);
-      addItem(newItem.trim(), q, newTags);
+      addItem(newItem.trim(), q, newTags, f);
       setNewItem("");
       setQuantity("");
       setTags("");
+      setFrequency("");
       setError(null);
     }
   };
@@ -37,6 +44,15 @@ export function AddGroceryForm() {
       setError(null);
     } else {
       setError("Quantity must be a number.");
+    }
+  };
+
+  const handleFrequencyChange = (text: string) => {
+    if (text === "" || /^[0-9]+$/.test(text)) {
+      setFrequency(text);
+      setError(null);
+    } else {
+      setError("Frequency must be a number.");
     }
   };
 
@@ -64,6 +80,14 @@ export function AddGroceryForm() {
         placeholder="Tags (comma separated)"
         value={tags}
         onChangeText={setTags}
+        onSubmitEditing={handleAddItem}
+      />
+      <TextInput
+        className="border border-gray-300 rounded-lg p-2 mb-4 dark:text-white"
+        placeholder="Frequency (days)"
+        value={frequency}
+        onChangeText={handleFrequencyChange}
+        keyboardType="numeric"
         onSubmitEditing={handleAddItem}
       />
       <Button onPress={handleAddItem} className="mb-4">

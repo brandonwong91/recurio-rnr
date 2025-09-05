@@ -21,6 +21,7 @@ type EditGroceryItemProps = {
     name: string;
     quantity?: number;
     tags?: string[];
+    frequency?: number;
   };
 };
 
@@ -29,15 +30,18 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
   const [name, setName] = useState(item.name);
   const [quantity, setQuantity] = useState(item.quantity?.toString() || "");
   const [tags, setTags] = useState(item.tags?.join(", ") || "");
+  const [frequency, setFrequency] = useState(item.frequency?.toString() || "");
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = () => {
     const q = quantity.trim() ? parseInt(quantity.trim(), 10) : undefined;
+    const f = frequency.trim() ? parseInt(frequency.trim(), 10) : undefined;
     const newTags = tags
       .split(",")
       .map((tag) => tag.trim())
       .filter((tag) => tag);
-    updateItem(item.id, name, q, newTags);
+    updateItem(item.id, name, q, newTags, f);
   };
 
   const handleCancel = () => {
@@ -52,6 +56,15 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
     await removeItem(item.id);
     setEditingItemId(null);
     setShowDeleteConfirmation(false);
+  };
+
+  const handleFrequencyChange = (text: string) => {
+    if (text === "" || /^[0-9]+$/.test(text)) {
+      setFrequency(text);
+      setError(null);
+    } else {
+      setError("Frequency must be a number.");
+    }
   };
 
   return (
@@ -75,6 +88,13 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
         value={tags}
         onChangeText={setTags}
       />
+      <TextInput
+        className="border border-gray-300 rounded-lg p-2 mt-2 dark:text-white"
+        placeholder="Frequency (days)"
+        value={frequency}
+        onChangeText={handleFrequencyChange}
+        keyboardType="numeric"
+      />
       <View className="flex-row justify-between mt-2">
         <Button onPress={handleDelete} size="sm" variant={"ghost"}>
           <Trash2 size={16} color={"red"} />
@@ -93,6 +113,7 @@ export function EditGroceryItem({ item }: EditGroceryItemProps) {
           </Button>
         </View>
       </View>
+      {error && <Text className="text-red-500 my-2">{error}</Text>}
       <AlertDialog
         open={showDeleteConfirmation}
         onOpenChange={setShowDeleteConfirmation}

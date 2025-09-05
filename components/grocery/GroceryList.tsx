@@ -1,5 +1,6 @@
 
 import { SectionList, View, Pressable } from "react-native";
+import { Repeat } from "lucide-react-native";
 import { Text } from "~/components/ui/text";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Badge } from "~/components/ui/badge";
@@ -13,6 +14,7 @@ interface GroceryItem {
   done: boolean;
   tags: string[];
   checkedAt: Date | null;
+  frequency?: number;
 }
 
 interface GroceryListProps {
@@ -52,6 +54,14 @@ export function GroceryList({ sections }: GroceryListProps) {
                 <Badge variant="secondary" className="ml-2">
                   <Text>{item.quantity}</Text>
                 </Badge>
+              )}
+              {item.frequency && (
+                <View className="flex-row items-center ml-2">
+                  <Repeat size={12} color="gray" />
+                  <Text className="ml-1 text-xs text-gray-500">
+                    {item.frequency} days
+                  </Text>
+                </View>
               )}
             </View>
             {item.done && item.checkedAt && (
