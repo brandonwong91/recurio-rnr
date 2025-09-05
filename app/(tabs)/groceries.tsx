@@ -8,6 +8,16 @@ import { ListPlus } from "lucide-react-native";
 import { AddGroceryForm } from "~/components/grocery/AddGroceryForm";
 import { GroceryList } from "~/components/grocery/GroceryList";
 import * as Accordion from "@rn-primitives/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 
 const groupItemsByTag = (items: any[]) => {
   const grouped: { [key: string]: any[] } = { Uncategorized: [] };
@@ -45,7 +55,15 @@ const groupItemsByTag = (items: any[]) => {
 };
 
 export default function GroceriesScreen() {
-  const { items, uncheckAll, fetchItems } = useGroceryStore();
+  const {
+    items,
+    fetchItems,
+    isRenewableDialogOpen,
+    renewableItems,
+    showRenewableDialog,
+    hideRenewableDialog,
+    renewItems,
+  } = useGroceryStore();
 
   useEffect(() => {
     fetchItems();
@@ -56,6 +74,11 @@ export default function GroceriesScreen() {
 
   const uncheckedSections = groupItemsByTag(uncheckedItems);
   const checkedSections = groupItemsByTag(checkedItems);
+
+  const handleRenew = () => {
+    const itemIds = renewableItems.map((item) => item.id);
+    renewItems(itemIds);
+  };
 
   return (
     <View className="flex flex-col p-4 max-w-md mx-auto w-full">
@@ -87,13 +110,37 @@ export default function GroceriesScreen() {
             <Separator className="flex-1" />
             <Text className="text-lg font-bold mx-2">Checked Items</Text>
             <Separator className="flex-1" />
-            <Button onPress={uncheckAll} variant="ghost" size="sm">
+            <Button onPress={showRenewableDialog} variant="ghost" size="sm">
               <ListPlus size={16} />
             </Button>
           </View>
           <GroceryList sections={checkedSections} />
         </>
       )}
+      <AlertDialog open={isRenewableDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renew Items</AlertDialogTitle>
+            <AlertDialogDescription>
+              The following items are ready to be renewed. Do you want to add them
+              back to your grocery list?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <View className="py-4">
+            {renewableItems.map((item) => (
+              <Text key={item.id} className="font-semibold">- {item.name}</Text>
+            ))}
+          </View>
+          <AlertDialogFooter>
+            <AlertDialogCancel onPress={hideRenewableDialog}>
+              <Text>Cancel</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction onPress={handleRenew}>
+              <Text>Renew</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </View>
   );
 }

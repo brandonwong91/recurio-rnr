@@ -16,13 +16,33 @@ type GroceryItem = {
   frequency?: number;
 };
 
+const isRenewable = (item: GroceryItem) => {
+  if (item.done && item.checkedAt && item.frequency) {
+    const checkedDate = new Date(item.checkedAt);
+    const renewalDate = new Date(
+      checkedDate.getTime() + item.frequency * 24 * 60 * 60 * 1000
+    );
+    return new Date() > renewalDate;
+  }
+  return false;
+};
+
 type GroceryState = {
   items: GroceryItem[];
   editingItemId: number | null;
+  isRenewableDialogOpen: boolean;
+  renewableItems: GroceryItem[];
   fetchItems: () => Promise<void>;
-  addItem: (name: string, quantity?: number, tags?: string[], frequency?: number) => Promise<void>;
+  addItem: (
+    name: string,
+    quantity?: number,
+    tags?: string[],
+    frequency?: number
+  ) => Promise<void>;
   toggleItem: (id: number) => Promise<void>;
-  uncheckAll: () => Promise<void>;
+  showRenewableDialog: () => void;
+  hideRenewableDialog: () => void;
+  renewItems: (itemIds: number[]) => Promise<void>;
   clearChecked: () => Promise<void>;
   setEditingItemId: (id: number | null) => void;
   updateItem: (
@@ -39,6 +59,8 @@ type GroceryState = {
 export const useGroceryStore = create<GroceryState>((set, get) => ({
   items: [],
   editingItemId: null,
+  isRenewableDialogOpen: false,
+  renewableItems: [],
   fetchItems: async () => {
     const items = await getGroceryItems();
     set({ items });
@@ -63,19 +85,25 @@ export const useGroceryStore = create<GroceryState>((set, get) => ({
       }));
     }
   },
-  uncheckAll: async () => {
-    const itemsToUpdate = get().items.filter((item) => item.done);
+  showRenewableDialog: () => {
+    const renewable = get().items.filter(isRenewable);
+    set({ renewableItems: renewable, isRenewableDialogOpen: true });
+  },
+  hideRenewableDialog: () =>
+    set({ isRenewableDialogOpen: false, renewableItems: [] }),
+  renewItems: async (itemIds) => {
+    const itemsToUpdate = get().items.filter((item) => itemIds.includes(item.id));
     await Promise.all(
       itemsToUpdate.map((item) =>
         updateGroceryItem({ ...item, done: false, checkedAt: null })
       )
     );
     set((state) => ({
-      items: state.items.map((item) => ({
-        ...item,
-        done: false,
-        checkedAt: null,
-      })),
+      items: state.items.map((item) =>
+        itemIds.includes(item.id) ? { ...item, done: false, checkedAt: null } : item
+      ),
+      isRenewableDialogOpen: false,
+      renewableItems: [],
     }));
   },
   clearChecked: async () => {
