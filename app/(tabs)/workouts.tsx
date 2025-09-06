@@ -1,14 +1,23 @@
 import React from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
 import { AddExerciseForm } from "~/components/workout/AddExerciseForm";
 import { AddWorkoutForm } from "~/components/workout/AddWorkoutForm";
 import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import * as Accordion from "@rn-primitives/accordion";
 import { Badge } from "~/components/ui/badge";
+import { EditExerciseItem } from "~/components/workout/EditExerciseItem";
+import { EditWorkoutItem } from "~/components/workout/EditWorkoutItem";
 
 export default function WorkoutsScreen() {
-  const { workouts, exercises } = useWorkoutStore();
+  const {
+    workouts,
+    exercises,
+    editingExerciseId,
+    setEditingExerciseId,
+    editingWorkoutId,
+    setEditingWorkoutId,
+  } = useWorkoutStore();
 
   return (
     <ScrollView className="flex-1 p-4 flex flex-col max-w-md w-full mx-auto bg-secondary/30">
@@ -41,16 +50,29 @@ export default function WorkoutsScreen() {
 
       <View className="mt-8">
         <Text className="text-2xl font-bold mb-4">Workouts</Text>
-        {workouts.map((workout) => (
-          <View key={workout.id} className="p-4 border rounded-lg mb-4">
-            <Text className="text-xl font-bold">{workout.name}</Text>
-            {workout.exercises.map((exercise) => (
-              <Text key={exercise.id} className="ml-4 mt-2">
-                - {exercise.name}
-              </Text>
-            ))}
-          </View>
-        ))}
+        {workouts.map((workout) =>
+          editingWorkoutId === workout.id ? (
+            <EditWorkoutItem key={workout.id} workout={workout} />
+          ) : (
+            <View key={workout.id} className="p-4 border rounded-lg mb-4">
+              <Pressable onPress={() => setEditingWorkoutId(workout.id)}>
+                <Text className="text-xl font-bold">{workout.name}</Text>
+              </Pressable>
+              {workout.exercises.map((exercise) =>
+                editingExerciseId === exercise.id ? (
+                  <EditExerciseItem key={exercise.id} exercise={exercise} />
+                ) : (
+                  <Pressable
+                    key={exercise.id}
+                    onPress={() => setEditingExerciseId(exercise.id)}
+                  >
+                    <Text className="ml-4 mt-2">- {exercise.name}</Text>
+                  </Pressable>
+                )
+              )}
+            </View>
+          )
+        )}
       </View>
 
       <View className="mt-8">

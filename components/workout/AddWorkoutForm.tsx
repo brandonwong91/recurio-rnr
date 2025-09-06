@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
-import { useWorkoutStore, Exercise } from "~/lib/stores/workoutStore";
+import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import { Input } from "~/components/ui/input";
+import { EditExerciseItem } from "./EditExerciseItem";
 
 export function AddWorkoutForm() {
   const [name, setName] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
-  const { exercises, addWorkout } = useWorkoutStore();
+  const { exercises, addWorkout, editingExerciseId, setEditingExerciseId } =
+    useWorkoutStore();
 
   const handleToggleExercise = (exerciseId: string) => {
     setSelectedExercises((prev) =>
@@ -39,12 +41,20 @@ export function AddWorkoutForm() {
       <Text className="font-bold mb-2">Select Exercises:</Text>
       {exercises.map((exercise) => (
         <View key={exercise.id} className="flex-row items-center mb-2">
-          <Checkbox
-            checked={selectedExercises.includes(exercise.id)}
-            onCheckedChange={() => handleToggleExercise(exercise.id)}
-            className="mr-2 w-4 h-4 cursor-pointer"
-          />
-          <Text className="ml-2">{exercise.name}</Text>
+          {editingExerciseId === exercise.id ? (
+            <EditExerciseItem exercise={exercise} />
+          ) : (
+            <>
+              <Checkbox
+                checked={selectedExercises.includes(exercise.id)}
+                onCheckedChange={() => handleToggleExercise(exercise.id)}
+                className="mr-2 w-4 h-4 cursor-pointer"
+              />
+              <Pressable onPress={() => setEditingExerciseId(exercise.id)}>
+                <Text className="ml-2">{exercise.name}</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       ))}
       <Button onPress={handleSubmit} className="mt-4">
