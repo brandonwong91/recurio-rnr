@@ -93,7 +93,7 @@ export default function GroceriesScreen() {
   };
 
   return (
-    <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full bg-secondary/30y">
+    <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full bg-secondary/30">
       <View className="flex-row justify-between items-center mb-4">
         <Accordion.Root type="single" collapsible className="flex-1">
           <Accordion.Item value="item-1">
