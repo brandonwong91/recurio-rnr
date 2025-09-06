@@ -6,8 +6,10 @@ import { AddWorkoutForm } from "~/components/workout/AddWorkoutForm";
 import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import * as Accordion from "@rn-primitives/accordion";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import { EditExerciseItem } from "~/components/workout/EditExerciseItem";
 import { EditWorkoutItem } from "~/components/workout/EditWorkoutItem";
+import { ActiveWorkout } from "~/components/workout/ActiveWorkout";
 
 export default function WorkoutsScreen() {
   const {
@@ -17,7 +19,13 @@ export default function WorkoutsScreen() {
     setEditingExerciseId,
     editingWorkoutId,
     setEditingWorkoutId,
+    activeWorkoutSession,
+    startWorkout,
   } = useWorkoutStore();
+
+  if (activeWorkoutSession) {
+    return <ActiveWorkout />;
+  }
 
   return (
     <ScrollView className="flex-1 p-4 flex flex-col max-w-md w-full mx-auto bg-secondary/30">
@@ -55,9 +63,14 @@ export default function WorkoutsScreen() {
             <EditWorkoutItem key={workout.id} workout={workout} />
           ) : (
             <View key={workout.id} className="p-4 border rounded-lg mb-4">
-              <Pressable onPress={() => setEditingWorkoutId(workout.id)}>
-                <Text className="text-xl font-bold">{workout.name}</Text>
-              </Pressable>
+              <View className="flex-row justify-between items-center">
+                <Pressable onPress={() => setEditingWorkoutId(workout.id)}>
+                  <Text className="text-xl font-bold">{workout.name}</Text>
+                </Pressable>
+                <Button onPress={() => startWorkout(workout.id)} size="sm">
+                  <Text>Start</Text>
+                </Button>
+              </View>
               {workout.exercises.map((exercise) =>
                 editingExerciseId === exercise.id ? (
                   <EditExerciseItem key={exercise.id} exercise={exercise} />

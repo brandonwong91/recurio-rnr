@@ -17,11 +17,17 @@ export type Workout = {
   exercises: Exercise[];
 };
 
+export type WorkoutSession = {
+  workoutId: string;
+  exerciseSets: Record<string, ExerciseSet[]>;
+};
+
 type WorkoutState = {
   workouts: Workout[];
   exercises: Exercise[];
   editingExerciseId: string | null;
   editingWorkoutId: string | null;
+  activeWorkoutSession: WorkoutSession | null;
   addExercise: (name: string) => void;
   updateExercise: (id: string, name: string) => void;
   deleteExercise: (id: string) => void;
@@ -30,6 +36,11 @@ type WorkoutState = {
   deleteWorkout: (id: string) => void;
   setEditingExerciseId: (id: string | null) => void;
   setEditingWorkoutId: (id: string | null) => void;
+  startWorkout: (workoutId: string) => void;
+  addSet: (exerciseId: string, newSet: ExerciseSet) => void;
+  updateSet: (exerciseId: string, setIndex: number, updatedSet: ExerciseSet) => void;
+  duplicateSet: (exerciseId: string, setIndex: number, setToDuplicate: ExerciseSet) => void;
+  endWorkout: () => void;
 };
 
 export const useWorkoutStore = create<WorkoutState>((set, get) => ({
@@ -37,6 +48,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   exercises: [],
   editingExerciseId: null,
   editingWorkoutId: null,
+  activeWorkoutSession: null,
   addExercise: (name) => {
     const newExercise: Exercise = {
       id: Date.now().toString(),
@@ -86,4 +98,66 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   },
   setEditingExerciseId: (id) => set({ editingExerciseId: id }),
   setEditingWorkoutId: (id) => set({ editingWorkoutId: id }),
+  startWorkout: (workoutId) => {
+    set({ activeWorkoutSession: { workoutId, exerciseSets: {} } });
+  },
+  addSet: (exerciseId, newSet) => {
+    set((state) => {
+      if (!state.activeWorkoutSession) return {};
+      const newExerciseSets = {
+        ...state.activeWorkoutSession.exerciseSets,
+      };
+      if (!newExerciseSets[exerciseId]) {
+        newExerciseSets[exerciseId] = [];
+      }
+      newExerciseSets[exerciseId].push(newSet);
+      return {
+        activeWorkoutSession: {
+          ...state.activeWorkoutSession,
+          exerciseSets: newExerciseSets,
+        },
+      };
+    });
+  },
+  updateSet: (exerciseId, setIndex, updatedSet) => {
+    set((state) => {
+      if (!state.activeWorkoutSession) return {};
+      const newExerciseSets = {
+        ...state.activeWorkoutSession.exerciseSets,
+      };
+      if (newExerciseSets[exerciseId]?.[setIndex]) {
+        newExerciseSets[exerciseId][setIndex] = updatedSet;
+      }
+      return {
+        activeWorkoutSession: {
+          ...state.activeWorkoutSession,
+          exerciseSets: newExerciseSets,
+        },
+      };
+    });
+  },
+  duplicateSet: (exerciseId, setIndex, setToDuplicate) => {
+    set((state) => {
+      if (!state.activeWorkoutSession) return {};
+      const newExerciseSets = {
+        ...state.activeWorkoutSession.exerciseSets,
+      };
+      if (setToDuplicate) {
+        if (!newExerciseSets[exerciseId]) {
+          newExerciseSets[exerciseId] = [];
+        }
+        newExerciseSets[exerciseId].splice(setIndex + 1, 0, setToDuplicate);
+      }
+      return {
+        activeWorkoutSession: {
+          ...state.activeWorkoutSession,
+          exerciseSets: newExerciseSets,
+        },
+      };
+    });
+  },
+  endWorkout: () => {
+    // Here you might want to save the workout session to a history
+    set({ activeWorkoutSession: null });
+  },
 }));
