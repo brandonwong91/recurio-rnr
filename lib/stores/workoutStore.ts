@@ -40,6 +40,7 @@ type WorkoutState = {
   addSet: (exerciseId: string, newSet: ExerciseSet) => void;
   updateSet: (exerciseId: string, setIndex: number, updatedSet: ExerciseSet) => void;
   duplicateSet: (exerciseId: string, setIndex: number, setToDuplicate: ExerciseSet) => void;
+  deleteSet: (exerciseId: string, setIndex: number) => void;
   endWorkout: () => void;
 };
 
@@ -147,6 +148,23 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
           newExerciseSets[exerciseId] = [];
         }
         newExerciseSets[exerciseId].splice(setIndex + 1, 0, setToDuplicate);
+      }
+      return {
+        activeWorkoutSession: {
+          ...state.activeWorkoutSession,
+          exerciseSets: newExerciseSets,
+        },
+      };
+    });
+  },
+  deleteSet: (exerciseId, setIndex) => {
+    set((state) => {
+      if (!state.activeWorkoutSession) return {};
+      const newExerciseSets = {
+        ...state.activeWorkoutSession.exerciseSets,
+      };
+      if (newExerciseSets[exerciseId]?.[setIndex]) {
+        newExerciseSets[exerciseId].splice(setIndex, 1);
       }
       return {
         activeWorkoutSession: {
