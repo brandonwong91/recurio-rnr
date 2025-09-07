@@ -5,7 +5,6 @@ import { AddExerciseForm } from "~/components/workout/AddExerciseForm";
 import { AddWorkoutForm } from "~/components/workout/AddWorkoutForm";
 import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import * as Accordion from "@rn-primitives/accordion";
-import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { EditExerciseItem } from "~/components/workout/EditExerciseItem";
 import { EditWorkoutItem } from "~/components/workout/EditWorkoutItem";
@@ -107,19 +106,28 @@ export default function WorkoutsScreen() {
       <View className="mt-8">
         <Text className="text-2xl font-bold mb-4">All Exercises</Text>
         <View className="flex flex-col space-y-4">
-          {exercisesWithMetrics.map((exercise) => (
-            <View key={exercise.id} className="p-4 border rounded-lg">
-              <Text className="text-lg font-bold">{exercise.name}</Text>
-              <Text>Last done: {daysAgo(exercise.last_done)}</Text>
-              {exercise.best_weight ? (
-                <Text>Best weight: {exercise.best_weight} kg</Text>
-              ) : exercise.best_reps ? (
-                <Text>Best reps: {exercise.best_reps}</Text>
-              ) : (
-                <Text>No data yet</Text>
-              )}
-            </View>
-          ))}
+          {exercisesWithMetrics.map((exercise) =>
+            editingExerciseId === exercise.id ? (
+              <EditExerciseItem key={exercise.id} exercise={exercise} />
+            ) : (
+              <Pressable
+                key={exercise.id}
+                onPress={() => setEditingExerciseId(exercise.id)}
+              >
+                <View className="p-4 border rounded-lg">
+                  <Text className="text-lg font-bold">{exercise.name}</Text>
+                  <Text>Last done: {daysAgo(exercise.last_done)}</Text>
+                  {exercise.best_weight ? (
+                    <Text>Best weight: {exercise.best_weight} kg</Text>
+                  ) : exercise.best_reps ? (
+                    <Text>Best reps: {exercise.best_reps}</Text>
+                  ) : (
+                    <Text>No data yet</Text>
+                  )}
+                </View>
+              </Pressable>
+            )
+          )}
         </View>
       </View>
     </ScrollView>
