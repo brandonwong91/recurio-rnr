@@ -303,6 +303,219 @@ export async function deleteGroceryItem(id: number) {
 }
 
 // ****************************************************************************
+// Workout and Exercise CRUD operations
+// ****************************************************************************
+
+export async function getWorkouts() {
+  const { data, error } = await supabase.from("workouts").select(`
+      id,
+      name,
+      exercises (
+        id,
+        name,
+        sets: workout_sets (
+          id,
+          reps,
+          weight
+        )
+      )
+    `);
+
+  if (error) {
+    console.error("Error fetching workouts:", error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function getExercises() {
+  const { data, error } = await supabase.from("exercises").select("*");
+
+  if (error) {
+    console.error("Error fetching exercises:", error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function addWorkout(name: string, exerciseIds: string[]) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("User not authenticated");
+    return null;
+  }
+
+  const { data: newWorkout, error: addWorkoutError } = await supabase
+    .from("workouts")
+    .insert({ name, user_id: user.id })
+    .select("id")
+    .single();
+
+  if (addWorkoutError) {
+    console.error("Error adding workout:", addWorkoutError);
+    return null;
+  }
+
+  const { error: addWorkoutExercisesError } = await supabase
+    .from("workout_exercises")
+    .insert(
+      exerciseIds.map((exercise_id) => ({
+        workout_id: newWorkout.id,
+        exercise_id,
+      }))
+    );
+
+  if (addWorkoutExercisesError) {
+    console.error(
+      "Error adding workout exercises:",
+      addWorkoutExercisesError
+    );
+    return null;
+  }
+
+  return { id: newWorkout.id, name, exercises: [] }; // Return a partial workout
+}
+
+export async function addExercise(name: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("User not authenticated");
+    return null;
+  }
+
+  const { data: newExercise, error } = await supabase
+    .from("exercises")
+    .insert({ name, user_id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding exercise:", error);
+    return null;
+  }
+
+  return newExercise;
+}
+
+export async function updateWorkout(id: string, name: string) {
+  const { error } = await supabase
+    .from("workouts")
+    .update({ name })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating workout:", error);
+  }
+}
+
+export async function updateExercise(id: string, name: string) {
+  const { error } = await supabase
+    .from("exercises")
+    .update({ name })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating exercise:", error);
+  }
+}
+
+export async function deleteWorkout(id: string) {
+  const { error } = await supabase.from("workouts").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting workout:", error);
+  }
+}
+
+export async function deleteExercise(id: string) {
+  const { error } = await supabase.from("exercises").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting exercise:", error);
+  }
+}
+
+export async function startWorkoutSession(workoutId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("User not authenticated");
+    return null;
+  }
+
+  const { data: newSession, error } = await supabase
+    .from("workout_sessions")
+    .insert({ workout_id: workoutId, user_id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error starting workout session:", error);
+    return null;
+  }
+
+  return newSession;
+}
+
+export async function addWorkoutSet(
+  sessionId: string,
+  exerciseId: string,
+  reps: number,
+  weight?: number
+) {
+  const { data: newSet, error } = await supabase
+    .from("workout_sets")
+    .insert({ session_id: sessionId, exercise_id: exerciseId, reps, weight })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding workout set:", error);
+    return null;
+  }
+
+  return newSet;
+}
+
+export async function updateWorkoutSet(
+  setId: string,
+  reps: number,
+  weight?: number
+) {
+  const { error } = await supabase
+    .from("workout_sets")
+    .update({ reps, weight })
+    .eq("id", setId);
+
+  if (error) {
+    console.error("Error updating workout set:", error);
+  }
+}
+
+export async function deleteWorkoutSet(setId: string) {
+  const { error } = await supabase
+    .from("workout_sets")
+    .delete()
+    .eq("id", setId);
+
+  if (error) {
+    console.error("Error deleting workout set:", error);
+  }
+}
+
+export async function endWorkoutSession(sessionId: string) {
+  const { error } = await supabase
+    .from("workout_sessions")
+    .update({ ended_at: new Date().toISOString() })
+    .eq("id", sessionId);
+
+  if (error) {
+    console.error("Error ending workout session:", error);
+  }
+}
+
+// ****************************************************************************
 // Payment Item CRUD operations
 // ****************************************************************************
 

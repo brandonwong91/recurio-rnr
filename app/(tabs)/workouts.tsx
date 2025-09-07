@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, ScrollView, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
 import { AddExerciseForm } from "~/components/workout/AddExerciseForm";
@@ -21,7 +21,14 @@ export default function WorkoutsScreen() {
     setEditingWorkoutId,
     activeWorkoutSession,
     startWorkout,
+    fetchExercises,
+    fetchWorkouts,
   } = useWorkoutStore();
+
+  useEffect(() => {
+    fetchWorkouts();
+    fetchExercises();
+  }, []);
 
   if (activeWorkoutSession) {
     return <ActiveWorkout />;
