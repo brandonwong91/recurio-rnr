@@ -102,24 +102,15 @@ export function ActiveWorkout() {
   };
 
   return (
-    <View className="p-4 rounded-lg m-4 bg-secondary/30">
+    <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full bg-secondary/30">
       <Text className="text-2xl font-bold mb-4">{activeWorkout.name}</Text>
       {activeWorkout.exercises.map((exercise) => (
         <View key={exercise.id} className="mb-4">
           <Text className="text-lg font-bold">{exercise.name}</Text>
           {activeWorkoutSession.exerciseSets[exercise.id]?.map((set, i) => (
-            <View key={i} className="flex-row items-center gap-2">
+            <View key={i} className="flex-row items-center gap-2 mb-2">
               <TextInput
-                className="border border-gray-300 rounded-lg p-2 w-20 dark:text-white"
-                placeholder="Reps"
-                value={set.reps.toString()}
-                onChangeText={(value) =>
-                  handleUpdateSet(exercise.id, i, "reps", value)
-                }
-                keyboardType="numeric"
-              />
-              <TextInput
-                className="border border-gray-300 rounded-lg p-2 w-20 dark:text-white"
+                className="border border-gray-300 rounded-lg p-2 w-full max-w-40  dark:text-white"
                 placeholder="Weight (kg)"
                 value={set.weight?.toString() || ""}
                 onChangeText={(value) =>
@@ -127,6 +118,16 @@ export function ActiveWorkout() {
                 }
                 keyboardType="numeric"
               />
+              <TextInput
+                className="border border-gray-300 rounded-lg p-2 w-full max-w-40  dark:text-white"
+                placeholder="Reps"
+                value={set.reps.toString()}
+                onChangeText={(value) =>
+                  handleUpdateSet(exercise.id, i, "reps", value)
+                }
+                keyboardType="numeric"
+              />
+
               <Button
                 onPress={() => handleDuplicateSet(exercise.id, i)}
                 size="sm"
@@ -147,18 +148,9 @@ export function ActiveWorkout() {
               </Button>
             </View>
           ))}
-          <View className="flex-row items-center mt-2 w-full">
+          <View className="flex-row items-center w-full">
             <TextInput
-              className="border border-gray-300 rounded-lg p-2 mr-2 w-20 dark:text-white"
-              placeholder="Reps"
-              value={setInputs[exercise.id]?.reps || ""}
-              onChangeText={(value) =>
-                handleInputChange(exercise.id, "reps", value)
-              }
-              keyboardType="numeric"
-            />
-            <TextInput
-              className="border border-gray-300 rounded-lg p-2 mr-2 w-20 dark:text-white"
+              className="border border-gray-300 rounded-lg p-2 mr-2 w-40 dark:text-white"
               placeholder="Weight (kg)"
               value={setInputs[exercise.id]?.weight || ""}
               onChangeText={(value) =>
@@ -166,6 +158,16 @@ export function ActiveWorkout() {
               }
               keyboardType="numeric"
             />
+            <TextInput
+              className="border border-gray-300 rounded-lg p-2 mr-2 w-40 dark:text-white"
+              placeholder="Reps"
+              value={setInputs[exercise.id]?.reps || ""}
+              onChangeText={(value) =>
+                handleInputChange(exercise.id, "reps", value)
+              }
+              keyboardType="numeric"
+            />
+
             <Button onPress={() => handleAddSet(exercise.id)} size="sm">
               <Text>
                 <Plus size={16} />
