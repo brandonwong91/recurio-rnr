@@ -515,6 +515,70 @@ export async function endWorkoutSession(sessionId: string) {
   }
 }
 
+export async function getExercisesWithMetrics() {
+  const { data: exercises, error: exercisesError } = await supabase
+    .from("exercises")
+    .select("id, name");
+
+  if (exercisesError) {
+    console.error("Error fetching exercises:", exercisesError);
+    return [];
+  }
+
+  const { data: sets, error: setsError } = await supabase
+    .from("workout_sets")
+    .select(`
+      exercise_id,
+      reps,
+      weight,
+      created_at
+    `);
+
+  if (setsError) {
+    console.error("Error fetching workout sets:", setsError);
+    return exercises.map((ex) => ({
+      ...ex,
+      last_done: null,
+      best_weight: null,
+      best_reps: null,
+    }));
+  }
+
+  const metrics = exercises.map((exercise) => {
+    const exerciseSets = sets.filter((s) => s.exercise_id === exercise.id);
+    if (exerciseSets.length === 0) {
+      return {
+        ...exercise,
+        last_done: null,
+        best_weight: null,
+        best_reps: null,
+      };
+    }
+
+    const lastDone = exerciseSets.reduce((latest, current) => {
+      return new Date(current.created_at) > new Date(latest.created_at)
+        ? current
+        : latest;
+    }).created_at;
+
+    const bestWeight = Math.max(...exerciseSets.map((s) => s.weight || 0));
+    const setsWithNoWeight = exerciseSets.filter((s) => !s.weight || s.weight === 0);
+    const bestReps =
+      setsWithNoWeight.length > 0
+        ? Math.max(...setsWithNoWeight.map((s) => s.reps))
+        : null;
+
+    return {
+      ...exercise,
+      last_done: lastDone,
+      best_weight: bestWeight > 0 ? bestWeight : null,
+      best_reps: bestReps,
+    };
+  });
+
+  return metrics;
+}
+
 // ****************************************************************************
 // Payment Item CRUD operations
 // ****************************************************************************

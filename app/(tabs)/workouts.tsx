@@ -11,23 +11,32 @@ import { EditExerciseItem } from "~/components/workout/EditExerciseItem";
 import { EditWorkoutItem } from "~/components/workout/EditWorkoutItem";
 import { ActiveWorkout } from "~/components/workout/ActiveWorkout";
 
+function daysAgo(dateString: string | null) {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return `${diffDays} days ago`;
+}
+
 export default function WorkoutsScreen() {
   const {
     workouts,
-    exercises,
+    exercisesWithMetrics,
     editingExerciseId,
     setEditingExerciseId,
     editingWorkoutId,
     setEditingWorkoutId,
     activeWorkoutSession,
     startWorkout,
-    fetchExercises,
+    fetchExercisesWithMetrics,
     fetchWorkouts,
   } = useWorkoutStore();
 
   useEffect(() => {
     fetchWorkouts();
-    fetchExercises();
+    fetchExercisesWithMetrics();
   }, []);
 
   if (activeWorkoutSession) {
@@ -97,11 +106,19 @@ export default function WorkoutsScreen() {
 
       <View className="mt-8">
         <Text className="text-2xl font-bold mb-4">All Exercises</Text>
-        <View className="flex-row flex-wrap">
-          {exercises.map((exercise) => (
-            <Badge key={exercise.id} variant="secondary" className="mr-2 mb-2">
-              <Text>{exercise.name}</Text>
-            </Badge>
+        <View className="flex flex-col space-y-4">
+          {exercisesWithMetrics.map((exercise) => (
+            <View key={exercise.id} className="p-4 border rounded-lg">
+              <Text className="text-lg font-bold">{exercise.name}</Text>
+              <Text>Last done: {daysAgo(exercise.last_done)}</Text>
+              {exercise.best_weight ? (
+                <Text>Best weight: {exercise.best_weight} kg</Text>
+              ) : exercise.best_reps ? (
+                <Text>Best reps: {exercise.best_reps}</Text>
+              ) : (
+                <Text>No data yet</Text>
+              )}
+            </View>
           ))}
         </View>
       </View>

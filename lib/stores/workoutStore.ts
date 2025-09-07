@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   getWorkouts,
   getExercises,
+  getExercisesWithMetrics,
   addWorkout as dbAddWorkout,
   addExercise as dbAddExercise,
   updateWorkout as dbUpdateWorkout,
@@ -42,12 +43,14 @@ export type WorkoutSession = {
 type WorkoutState = {
   workouts: Workout[];
   exercises: Exercise[];
+  exercisesWithMetrics: any[];
   editingExerciseId: string | null;
   editingWorkoutId: string | null;
   activeWorkoutSession: WorkoutSession | null;
   loading: boolean;
   fetchWorkouts: () => Promise<void>;
   fetchExercises: () => Promise<void>;
+  fetchExercisesWithMetrics: () => Promise<void>;
   addExercise: (name: string) => Promise<void>;
   updateExercise: (id: string, name: string) => Promise<void>;
   deleteExercise: (id: string) => Promise<void>;
@@ -75,6 +78,7 @@ type WorkoutState = {
 export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   workouts: [],
   exercises: [],
+  exercisesWithMetrics: [],
   editingExerciseId: null,
   editingWorkoutId: null,
   activeWorkoutSession: null,
@@ -88,6 +92,11 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     set({ loading: true });
     const exercises = await getExercises();
     set({ exercises, loading: false });
+  },
+  fetchExercisesWithMetrics: async () => {
+    set({ loading: true });
+    const exercisesWithMetrics = await getExercisesWithMetrics();
+    set({ exercisesWithMetrics, loading: false });
   },
   addExercise: async (name) => {
     const newExercise = await dbAddExercise(name);
