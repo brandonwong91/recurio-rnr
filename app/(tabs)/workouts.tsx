@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/button";
 import { EditExerciseItem } from "~/components/workout/EditExerciseItem";
 import { EditWorkoutItem } from "~/components/workout/EditWorkoutItem";
 import { ActiveWorkout } from "~/components/workout/ActiveWorkout";
+import { ExerciseStats } from "~/components/workout/ExerciseStats";
 
 function daysAgo(dateString: string | null) {
   if (!dateString) return "N/A";
@@ -31,6 +32,8 @@ export default function WorkoutsScreen() {
     startWorkout,
     fetchExercisesWithMetrics,
     fetchWorkouts,
+    viewingStatsForExerciseId,
+    setViewingStatsForExerciseId,
   } = useWorkoutStore();
 
   useEffect(() => {
@@ -110,11 +113,8 @@ export default function WorkoutsScreen() {
             editingExerciseId === exercise.id ? (
               <EditExerciseItem key={exercise.id} exercise={exercise} />
             ) : (
-              <Pressable
-                key={exercise.id}
-                onPress={() => setEditingExerciseId(exercise.id)}
-              >
-                <View className="p-4 border rounded-lg">
+              <View key={exercise.id} className="p-4 border rounded-lg">
+                <Pressable onPress={() => setEditingExerciseId(exercise.id)}>
                   <Text className="text-lg font-bold">{exercise.name}</Text>
                   <Text>Last done: {daysAgo(exercise.last_done)}</Text>
                   {exercise.best_weight ? (
@@ -124,8 +124,28 @@ export default function WorkoutsScreen() {
                   ) : (
                     <Text>No data yet</Text>
                   )}
-                </View>
-              </Pressable>
+                </Pressable>
+                <Button
+                  onPress={() => setViewingStatsForExerciseId(exercise.id)}
+                  size="sm"
+                  className="mt-2"
+                >
+                  <Text>Stats</Text>
+                </Button>
+                {viewingStatsForExerciseId === exercise.id && (
+                  <View>
+                    <ExerciseStats exerciseId={exercise.id} />
+                    <Button
+                      onPress={() => setViewingStatsForExerciseId(null)}
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                    >
+                      <Text>Close</Text>
+                    </Button>
+                  </View>
+                )}
+              </View>
             )
           )}
         </View>

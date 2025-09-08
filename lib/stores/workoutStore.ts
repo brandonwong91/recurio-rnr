@@ -3,6 +3,7 @@ import {
   getWorkouts,
   getExercises,
   getExercisesWithMetrics,
+  getSetsForExercise,
   addWorkout as dbAddWorkout,
   addExercise as dbAddExercise,
   updateWorkout as dbUpdateWorkout,
@@ -44,13 +45,16 @@ type WorkoutState = {
   workouts: Workout[];
   exercises: Exercise[];
   exercisesWithMetrics: any[];
+  setsForExercise: any[];
   editingExerciseId: string | null;
   editingWorkoutId: string | null;
+  viewingStatsForExerciseId: string | null;
   activeWorkoutSession: WorkoutSession | null;
   loading: boolean;
   fetchWorkouts: () => Promise<void>;
   fetchExercises: () => Promise<void>;
   fetchExercisesWithMetrics: () => Promise<void>;
+  fetchSetsForExercise: (exerciseId: string) => Promise<void>;
   addExercise: (name: string) => Promise<void>;
   updateExercise: (id: string, name: string) => Promise<void>;
   deleteExercise: (id: string) => Promise<void>;
@@ -59,6 +63,7 @@ type WorkoutState = {
   deleteWorkout: (id: string) => Promise<void>;
   setEditingExerciseId: (id: string | null) => void;
   setEditingWorkoutId: (id: string | null) => void;
+  setViewingStatsForExerciseId: (id: string | null) => void;
   startWorkout: (workoutId: string) => Promise<void>;
   addSet: (exerciseId: string, newSet: Omit<ExerciseSet, "id">) => Promise<void>;
   updateSet: (
@@ -66,12 +71,14 @@ type WorkoutState = {
     setIndex: number,
     updatedSet: ExerciseSet
   ) => Promise<void>;
+  updateSetById: (setId: string, reps: number, weight?: number) => Promise<void>;
   duplicateSet: (
     exerciseId: string,
     setIndex: number,
     setToDuplicate: ExerciseSet
   ) => Promise<void>;
   deleteSet: (exerciseId: string, setIndex: number) => Promise<void>;
+  deleteSetById: (setId: string) => Promise<void>;
   endWorkout: () => Promise<void>;
 };
 
@@ -79,8 +86,10 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   workouts: [],
   exercises: [],
   exercisesWithMetrics: [],
+  setsForExercise: [],
   editingExerciseId: null,
   editingWorkoutId: null,
+  viewingStatsForExerciseId: null,
   activeWorkoutSession: null,
   loading: false,
   fetchWorkouts: async () => {
@@ -97,6 +106,11 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     set({ loading: true });
     const exercisesWithMetrics = await getExercisesWithMetrics();
     set({ exercisesWithMetrics, loading: false });
+  },
+  fetchSetsForExercise: async (exerciseId: string) => {
+    set({ loading: true });
+    const sets = await getSetsForExercise(exerciseId);
+    set({ setsForExercise: sets, loading: false });
   },
   addExercise: async (name) => {
     const newExercise = await dbAddExercise(name);
@@ -149,6 +163,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   },
   setEditingExerciseId: (id) => set({ editingExerciseId: id }),
   setEditingWorkoutId: (id) => set({ editingWorkoutId: id }),
+  setViewingStatsForExerciseId: (id) => set({ viewingStatsForExerciseId: id }),
   startWorkout: async (workoutId) => {
     set({ loading: true });
     const { workouts } = get();
@@ -234,6 +249,14 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       };
     });
   },
+  updateSetById: async (setId, reps, weight) => {
+    await dbUpdateWorkoutSet(setId, reps, weight);
+    set((state) => ({
+      setsForExercise: state.setsForExercise.map((s) =>
+        s.id === setId ? { ...s, reps, weight } : s
+      ),
+    }));
+  },
   duplicateSet: async (exerciseId, setIndex, setToDuplicate) => {
     const state = get();
     if (!state.activeWorkoutSession) return;
@@ -284,6 +307,12 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
         },
       };
     });
+  },
+  deleteSetById: async (setId: string) => {
+    await dbDeleteWorkoutSet(setId);
+    set((state) => ({
+      setsForExercise: state.setsForExercise.filter((s) => s.id !== setId),
+    }));
   },
   endWorkout: async () => {
     const state = get();

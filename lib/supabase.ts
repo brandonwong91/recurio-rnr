@@ -515,6 +515,21 @@ export async function endWorkoutSession(sessionId: string) {
   }
 }
 
+export async function getSetsForExercise(exerciseId: string) {
+  const { data, error } = await supabase
+    .from("workout_sets")
+    .select("*")
+    .eq("exercise_id", exerciseId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching sets for exercise:", error);
+    return [];
+  }
+
+  return data;
+}
+
 export async function getExercisesWithMetrics() {
   const { data: exercises, error: exercisesError } = await supabase
     .from("exercises")
