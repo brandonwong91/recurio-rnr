@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, TextInput } from 'react-native';
-import { Button } from '~/components/ui/button';
-import { useWorkoutStore } from '~/lib/stores/workoutStore';
-import { Check, X } from 'lucide-react-native';
+import React, { useState } from "react";
+import { View, TextInput } from "react-native";
+import { Button } from "~/components/ui/button";
+import { useWorkoutStore } from "~/lib/stores/workoutStore";
+import { Check, X } from "lucide-react-native";
 
 type EditExerciseSetProps = {
   set: any;
@@ -12,7 +12,7 @@ type EditExerciseSetProps = {
 export function EditExerciseSet({ set, onFinished }: EditExerciseSetProps) {
   const { updateSetById } = useWorkoutStore();
   const [reps, setReps] = useState(set.reps.toString());
-  const [weight, setWeight] = useState(set.weight ? set.weight.toString() : '');
+  const [weight, setWeight] = useState(set.weight ? set.weight.toString() : "");
 
   const handleSave = () => {
     const repsNum = parseInt(reps, 10);
@@ -26,14 +26,14 @@ export function EditExerciseSet({ set, onFinished }: EditExerciseSetProps) {
   return (
     <View className="flex-row items-center p-2">
       <TextInput
-        className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
+        className="flex-1 border border-gray-300 w-20 rounded-lg p-2 mr-2 dark:text-white"
         value={reps}
         onChangeText={setReps}
         keyboardType="number-pad"
         placeholder="Reps"
       />
       <TextInput
-        className="flex-1 border border-gray-300 rounded-lg p-2 mr-2 dark:text-white"
+        className="flex-1 border border-gray-300 w-20 rounded-lg p-2 mr-2 dark:text-white"
         value={weight}
         onChangeText={setWeight}
         keyboardType="number-pad"

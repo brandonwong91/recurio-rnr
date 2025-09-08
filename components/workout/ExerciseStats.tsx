@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Alert } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { useWorkoutStore } from '~/lib/stores/workoutStore';
 import { Button } from '~/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react-native';
 import { EditExerciseSet } from './EditExerciseSet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '~/components/ui/alert-dialog';
 
 type ExerciseStatsProps = {
   exerciseId: string;
@@ -21,21 +32,6 @@ export function ExerciseStats({ exerciseId }: ExerciseStatsProps) {
     fetchSetsForExercise(exerciseId);
   }, [exerciseId]);
 
-  const handleDelete = (setId: string) => {
-    Alert.alert(
-      'Delete Set',
-      'Are you sure you want to delete this set?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          onPress: () => deleteSetById(setId),
-          style: 'destructive',
-        },
-      ]
-    );
-  };
-
   const renderItem = ({ item }: { item: any }) => {
     if (editingSetId === item.id) {
       return <EditExerciseSet set={item} onFinished={() => setEditingSetId(null)} />;
@@ -50,9 +46,29 @@ export function ExerciseStats({ exerciseId }: ExerciseStatsProps) {
           <Button variant="ghost" size="sm" onPress={() => setEditingSetId(item.id)}>
             <Edit size={16} />
           </Button>
-          <Button variant="ghost" size="sm" onPress={() => handleDelete(item.id)}>
-            <Trash2 size={16} color="red" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <Trash2 size={16} color="red" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete this set.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>
+                  <Text>Cancel</Text>
+                </AlertDialogCancel>
+                <AlertDialogAction onPress={() => deleteSetById(item.id)}>
+                  <Text>Delete</Text>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </View>
       </View>
     );
