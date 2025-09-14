@@ -1,8 +1,20 @@
 import { Check, X, Trash2 } from "lucide-react-native";
 import { useState } from "react";
-import { View, TextInput, Alert } from "react-native";
+import { View, TextInput } from "react-native";
 import { Button } from "~/components/ui/button";
 import { useWorkoutStore, Exercise } from "~/lib/stores/workoutStore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
+import { Text } from "~/components/ui/text";
 
 type EditExerciseItemProps = {
   exercise: Exercise;
@@ -21,21 +33,6 @@ export function EditExerciseItem({ exercise }: EditExerciseItemProps) {
 
   const handleCancel = () => {
     setEditingExerciseId(null);
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      "Delete Exercise",
-      "Are you sure you want to delete this exercise?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          onPress: () => deleteExercise(exercise.id),
-          style: "destructive",
-        },
-      ]
-    );
   };
 
   return (
@@ -58,9 +55,30 @@ export function EditExerciseItem({ exercise }: EditExerciseItemProps) {
         >
           <X size={16} color={"red"} />
         </Button>
-        <Button onPress={handleDelete} size="sm" variant={"ghost"}>
-          <Trash2 size={16} color={"red"} />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant={"ghost"}>
+              <Trash2 size={16} color={"red"} />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete this
+                exercise and all its sets.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                <Text>Cancel</Text>
+              </AlertDialogCancel>
+              <AlertDialogAction onPress={() => deleteExercise(exercise.id)}>
+                <Text>Delete</Text>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </View>
     </View>
   );

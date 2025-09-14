@@ -137,6 +137,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     await dbDeleteExercise(id);
     set((state) => ({
       exercises: state.exercises.filter((ex) => ex.id !== id),
+      exercisesWithMetrics: state.exercisesWithMetrics.filter((ex) => ex.id !== id),
       workouts: state.workouts.map((w) => ({
         ...w,
         exercises: w.exercises.filter((ex) => ex.id !== id),
