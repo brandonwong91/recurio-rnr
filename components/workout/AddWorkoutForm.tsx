@@ -7,7 +7,11 @@ import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import { Input } from "~/components/ui/input";
 import { EditExerciseItem } from "./EditExerciseItem";
 
-export function AddWorkoutForm() {
+type AddWorkoutFormProps = {
+  onFinished?: () => void;
+};
+
+export function AddWorkoutForm({ onFinished }: AddWorkoutFormProps) {
   const [name, setName] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const { exercises, addWorkout, editingExerciseId, setEditingExerciseId } =
@@ -26,12 +30,14 @@ export function AddWorkoutForm() {
       addWorkout(name.trim(), selectedExercises);
       setName("");
       setSelectedExercises([]);
+      if (onFinished) {
+        onFinished();
+      }
     }
   };
 
   return (
-    <View className="p-4 border rounded-lg mt-4">
-      <Text className="text-lg font-bold mb-4">Add New Workout</Text>
+    <View>
       <Input
         placeholder="Workout Name (e.g., Chest Day)"
         value={name}

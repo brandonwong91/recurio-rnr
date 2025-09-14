@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
-import { View, ScrollView, Pressable } from "react-native";
+import { View, ScrollView, Pressable, Platform } from "react-native";
 import { Text } from "~/components/ui/text";
 import { AddExerciseForm } from "~/components/workout/AddExerciseForm";
-import { AddWorkoutForm } from "~/components/workout/AddWorkoutForm";
 import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import * as Accordion from "@rn-primitives/accordion";
 import { Button } from "~/components/ui/button";
@@ -10,6 +9,10 @@ import { EditExerciseItem } from "~/components/workout/EditExerciseItem";
 import { EditWorkoutItem } from "~/components/workout/EditWorkoutItem";
 import { ActiveWorkout } from "~/components/workout/ActiveWorkout";
 import { ExerciseStats } from "~/components/workout/ExerciseStats";
+import { Icon } from "~/components/ui/icon";
+import { cn } from "~/lib/utils";
+import { Plus } from "lucide-react-native";
+import { AddWorkoutDialog } from "~/components/workout/AddWorkoutDialog";
 
 function daysAgo(dateString: string | null) {
   if (!dateString) return "N/A";
@@ -30,14 +33,18 @@ export default function WorkoutsScreen() {
     setEditingWorkoutId,
     activeWorkoutSession,
     startWorkout,
+    fetchExercises,
     fetchExercisesWithMetrics,
     fetchWorkouts,
     viewingStatsForExerciseId,
     setViewingStatsForExerciseId,
+    isAddWorkoutDialogOpen,
+    setAddWorkoutDialogOpen,
   } = useWorkoutStore();
 
   useEffect(() => {
     fetchWorkouts();
+    fetchExercises();
     fetchExercisesWithMetrics();
   }, []);
 
@@ -47,6 +54,10 @@ export default function WorkoutsScreen() {
 
   return (
     <ScrollView className="flex-1 p-4 flex flex-col max-w-md w-full mx-auto bg-secondary/30">
+      <AddWorkoutDialog
+        isOpen={isAddWorkoutDialogOpen}
+        onOpenChange={setAddWorkoutDialogOpen}
+      />
       <Accordion.Root type="multiple" className="w-full">
         <Accordion.Item value="add-exercise">
           <Accordion.Header>
@@ -60,22 +71,26 @@ export default function WorkoutsScreen() {
             <AddExerciseForm />
           </Accordion.Content>
         </Accordion.Item>
-        <Accordion.Item value="add-workout" className="mt-4">
-          <Accordion.Header>
-            <Accordion.Trigger>
-              <View className="flex-row justify-between items-center p-2 border rounded-lg text-center">
-                <Text className="font-bold text-center">Add Workout</Text>
-              </View>
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Content className="pt-4">
-            <AddWorkoutForm />
-          </Accordion.Content>
-        </Accordion.Item>
       </Accordion.Root>
 
       <View className="mt-8">
-        <Text className="text-2xl font-bold mb-4">Workouts</Text>
+        <View className="flex flex-row justify-between items-center">
+          <Text className="text-2xl font-bold mb-4">Workouts</Text>
+          <Button
+            variant={"ghost"}
+            size={"icon"}
+            className="p-2 rounded-lg"
+            onPress={() => setAddWorkoutDialogOpen(true)}
+          >
+            <Icon
+              as={Plus}
+              className={cn(
+                "text-foreground size-4",
+                Platform.select({ web: "pointer-events-none" })
+              )}
+            />
+          </Button>
+        </View>
         {workouts.map((workout) =>
           editingWorkoutId === workout.id ? (
             <EditWorkoutItem key={workout.id} workout={workout} />
