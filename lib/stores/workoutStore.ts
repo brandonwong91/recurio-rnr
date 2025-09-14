@@ -50,6 +50,7 @@ type WorkoutState = {
   editingWorkoutId: string | null;
   viewingStatsForExerciseId: string | null;
   isAddWorkoutDialogOpen: boolean;
+  isAddExerciseDialogOpen: boolean;
   activeWorkoutSession: WorkoutSession | null;
   loading: boolean;
   fetchWorkouts: () => Promise<void>;
@@ -66,6 +67,7 @@ type WorkoutState = {
   setEditingWorkoutId: (id: string | null) => void;
   setViewingStatsForExerciseId: (id: string | null) => void;
   setAddWorkoutDialogOpen: (isOpen: boolean) => void;
+  setAddExerciseDialogOpen: (isOpen: boolean) => void;
   startWorkout: (workoutId: string) => Promise<void>;
   addSet: (exerciseId: string, newSet: Omit<ExerciseSet, "id">) => Promise<void>;
   updateSet: (
@@ -93,6 +95,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   editingWorkoutId: null,
   viewingStatsForExerciseId: null,
   isAddWorkoutDialogOpen: false,
+  isAddExerciseDialogOpen: false,
   activeWorkoutSession: null,
   loading: false,
   fetchWorkouts: async () => {
@@ -168,6 +171,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   setEditingWorkoutId: (id) => set({ editingWorkoutId: id }),
   setViewingStatsForExerciseId: (id) => set({ viewingStatsForExerciseId: id }),
   setAddWorkoutDialogOpen: (isOpen) => set({ isAddWorkoutDialogOpen: isOpen }),
+  setAddExerciseDialogOpen: (isOpen) => set({ isAddExerciseDialogOpen: isOpen }),
   startWorkout: async (workoutId) => {
     set({ loading: true });
     const { workouts } = get();

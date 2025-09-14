@@ -5,7 +5,11 @@ import { Button } from "~/components/ui/button";
 import { useWorkoutStore } from "~/lib/stores/workoutStore";
 import { Input } from "~/components/ui/input";
 
-export function AddExerciseForm() {
+type AddExerciseFormProps = {
+  onFinished?: () => void;
+};
+
+export function AddExerciseForm({ onFinished }: AddExerciseFormProps) {
   const [name, setName] = useState("");
   const addExercise = useWorkoutStore((state) => state.addExercise);
 
@@ -13,12 +17,14 @@ export function AddExerciseForm() {
     if (name.trim()) {
       addExercise(name.trim());
       setName("");
+      if (onFinished) {
+        onFinished();
+      }
     }
   };
 
   return (
-    <View className="p-4 border rounded-lg">
-      <Text className="text-lg font-bold mb-4">Add New Exercise</Text>
+    <View>
       <Input
         placeholder="Exercise Name (e.g., Bench Press)"
         value={name}
