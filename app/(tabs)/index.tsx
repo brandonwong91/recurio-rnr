@@ -1,84 +1,67 @@
-import * as React from "react";
-import { View, TextInput, FlatList } from "react-native";
-import { Calendar } from "react-native-calendars";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useState } from "react";
+import { View, FlatList } from "react-native";
 import { Text } from "~/components/ui/text";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
-interface Task {
-  id: string;
-  text: string;
-  completed: boolean;
-}
+export default function Chat() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+    }),
+  });
+  const [input, setInput] = useState("");
 
-export default function Screen() {
-  const [tasks, setTasks] = React.useState<Task[]>([]);
-  const [taskText, setTaskText] = React.useState("");
-
-  const addTask = () => {
-    if (taskText.trim().length > 0) {
-      setTasks([
-        ...tasks,
-        { id: Date.now().toString(), text: taskText, completed: false },
-      ]);
-      setTaskText("");
+  const handleSend = () => {
+    if (input.trim()) {
+      sendMessage({ text: input });
+      setInput("");
     }
   };
 
-  const toggleTask = (id: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
-  };
-
   return (
-    <View className="flex-1 p-6 bg-secondary/30 max-w-sm mx-auto">
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Calendar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Calendar />
-        </CardContent>
-      </Card>
+    <View style={{ flex: 1, padding: 10 }}>
       <Card>
         <CardHeader>
-          <CardTitle>To-Do List</CardTitle>
+          <CardTitle>Chat</CardTitle>
         </CardHeader>
         <CardContent>
-          <View className="flex-row mb-4">
-            <TextInput
-              className="flex-1 border border-input rounded-md p-2 mr-2"
-              placeholder="Add a new task"
-              value={taskText}
-              onChangeText={setTaskText}
-            />
-            <Button onPress={addTask}>
-              <Text>Add</Text>
-            </Button>
-          </View>
           <FlatList
-            data={tasks}
+            data={messages}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View className="flex-row items-center mb-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onPress={() => toggleTask(item.id)}
-                >
-                  <Text>{item.completed ? "[x]" : "[ ]"}</Text>
-                </Button>
-                <Text className={item.completed ? "line-through" : ""}>
-                  {item.text}
-                </Text>
-              </View>
+              <Card style={{ marginVertical: 5 }}>
+                <CardContent style={{ padding: 10 }}>
+                  <Text>{item.role === "user" ? "User: " : "AI: "}</Text>
+                  {item.parts.map((part, index) =>
+                    part.type === "text" ? <Text key={index}>{part.text}</Text> : null
+                  )}
+                </CardContent>
+              </Card>
             )}
           />
         </CardContent>
       </Card>
+      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+        <Input
+          style={{ flex: 1, borderWidth: 1, padding: 10, borderRadius: 5 }}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Type your message..."
+          editable={status === "ready"}
+        />
+        <Button onPress={handleSend} disabled={status !== "ready"}>
+          <Text>Send</Text>
+        </Button>
+      </View>
     </View>
   );
 }
