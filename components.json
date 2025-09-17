@@ -9,11 +9,15 @@
     "baseColor": "neutral",
     "cssVariables": true
   },
+  "iconLibrary": "radix",
   "aliases": {
     "components": "~/components",
     "utils": "~/lib/utils",
     "ui": "~/components/ui",
     "lib": "~/lib",
     "hooks": "~/hooks"
+  },
+  "registries": {
+    "@ai-elements": "https://registry.ai-sdk.dev/{name}.json"
   }
 }
