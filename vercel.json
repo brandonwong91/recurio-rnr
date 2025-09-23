@@ -5,12 +5,12 @@
   "cleanUrls": true,
   "framework": null,
   "functions": {
-    "app/api/**/*.ts": {
+    "app/api/chat+api.ts": {
       "runtime": "nodejs18.x"
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/api/chat", "destination": "/app/api/chat+api.ts" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
