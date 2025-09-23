@@ -14,7 +14,11 @@ import { useColorScheme } from "~/lib/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { supabase } from "~/lib/supabase";
-import React, { useEffect, useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import { AnimatedSplashScreen } from "~/components/AnimatedSplashScreen";
+
+SplashScreen.preventAutoHideAsync();
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -41,8 +45,24 @@ export default function RootLayout() {
   const { isDarkColorScheme } = useColorScheme();
   const segments = useSegments();
   const router = useRouter();
+  const [authInitialized, setAuthInitialized] = useState(false);
+  const [splashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      const inAuthGroup = segments[0] === "(auth)";
+
+      if (data.session && inAuthGroup) {
+        router.replace("/(tabs)");
+      } else if (!data.session && !inAuthGroup) {
+        router.replace("/(auth)/login");
+      }
+      setAuthInitialized(true);
+    };
+
+    checkAuth();
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -54,10 +74,21 @@ export default function RootLayout() {
         router.replace("/(auth)/login");
       }
     });
+
     return () => {
       subscription.unsubscribe();
     };
   }, [segments, router]);
+
+  useEffect(() => {
+    if (authInitialized) {
+      SplashScreen.hideAsync();
+    }
+  }, [authInitialized]);
+
+  if (!authInitialized) {
+    return null;
+  }
 
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
@@ -77,6 +108,11 @@ export default function RootLayout() {
         />
       </Stack>
       <PortalHost />
+      {!splashAnimationComplete && (
+        <AnimatedSplashScreen
+          onAnimationComplete={() => setSplashAnimationComplete(true)}
+        />
+      )}
     </ThemeProvider>
   );
 }
