@@ -57,9 +57,12 @@ const buttonTextVariants = cva(
   }
 );
 
-type ButtonProps = React.ComponentProps<typeof Pressable> & VariantProps<typeof buttonVariants>;
+type ButtonProps = React.ComponentProps<typeof Pressable> &
+  VariantProps<typeof buttonVariants> & {
+    type?: 'button' | 'submit' | 'reset';
+  };
 
-function Button({ ref, className, variant, size, ...props }: ButtonProps) {
+function Button({ ref, className, variant, size, type, ...props }: ButtonProps) {
   return (
     <TextClassContext.Provider
       value={buttonTextVariants({ variant, size, className: 'web:pointer-events-none' })}

@@ -30,6 +30,7 @@ export default function Chat() {
   });
 
   const handleSubmit = (message: PromptInputMessage) => {
+    console.log("handleSubmit", message);
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 
@@ -90,9 +91,12 @@ export default function Chat() {
             className="pr-12"
           />
           <PromptInputSubmit
-            status={status === "streaming" ? "streaming" : "ready"}
-            disabled={!input.trim()}
-            className="absolute bottom-1 right-1"
+            status={status}
+            disabled={
+              !input.trim() || status === "submitted" || status === "streaming"
+            }
+            onPress={() => handleSubmit({ text: input })}
+            className="absolute bottom-1 right-1 text-secondary"
           />
         </PromptInput>
       </View>
