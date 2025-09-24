@@ -1,16 +1,10 @@
 {
+  "framework": "expo",
   "buildCommand": "expo export -p web",
   "outputDirectory": "dist",
-  "devCommand": "expo",
+  "devCommand": "expo start",
   "cleanUrls": true,
-  "framework": null,
-  "functions": {
-    "app/api/chat+api.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
-    { "source": "/api/chat", "destination": "/app/api/chat+api.ts" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
