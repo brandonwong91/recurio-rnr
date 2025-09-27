@@ -15,5 +15,10 @@ export async function POST(req: Request) {
     prompt: convertToModelMessages(messages),
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "Content-Encoding": "none",
+    },
+  });
 }
