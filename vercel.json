@@ -3,5 +3,14 @@
   "outputDirectory": "dist",
   "devCommand": "expo start",
   "cleanUrls": true,
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
 }
