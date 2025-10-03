@@ -50,7 +50,15 @@
         ]
       }
     },
-    "plugins": ["expo-router", "@react-native-google-signin/google-signin"],
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://recurio-rnr.vercel.app/"
+        }
+      ],
+      "@react-native-google-signin/google-signin"
+    ],
     "experiments": {
       "typedRoutes": true
     },
