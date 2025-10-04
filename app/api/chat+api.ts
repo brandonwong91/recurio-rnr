@@ -9,12 +9,12 @@ const google = createGoogleGenerativeAI({
 
 export async function POST(request: Request) {
   const { messages }: { messages: UIMessage[] } = await request.json();
-
+  console.log("Messages:", messages);
   const result = await streamText({
     model: google("gemini-2.5-flash"),
     prompt: convertToModelMessages(messages),
   });
-
+  console.log("Result:", result);
   return result.toUIMessageStreamResponse({
     headers: {
       "Content-Type": "application/octet-stream",
