@@ -12,7 +12,7 @@ export default function ChatScreen() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
-      api: generateAPIUrl("/chat"),
+      api: generateAPIUrl("/api/chat"),
     }),
   });
 

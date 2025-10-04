@@ -131,6 +131,9 @@ importers:
       expo-router:
         specifier: ~5.1.5
         version: 5.1.5(a413646c39485dd9e5b63a4c12394d83)
+      expo-server:
+        specifier: ^1.0.0
+        version: 1.0.0
       expo-splash-screen:
         specifier: ~0.30.10
         version: 0.30.10(expo@53.0.22(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.3)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.5(@babel/core@7.28.3)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
@@ -3025,6 +3028,10 @@ packages:
         optional: true
       react-native-reanimated:
         optional: true
+
+  expo-server@1.0.0:
+    resolution: {integrity: sha512-fAAI0ZXxayc2Rt5KfQjULv+TFreuLRZ+hdpc5TxZJ7CDpW1ZIqaVzELHh1rYTRVEBDFDiCBXtioS9WWTEAX+fg==}
+    engines: {node: '>=20.16.0'}
 
   expo-splash-screen@0.30.10:
     resolution: {integrity: sha512-Tt9va/sLENQDQYeOQ6cdLdGvTZ644KR3YG9aRlnpcs2/beYjOX1LHT510EGzVN9ljUTg+1ebEo5GGt2arYtPjw==}
@@ -8820,6 +8827,8 @@ snapshots:
       - react
       - react-native
       - supports-color
+
+  expo-server@1.0.0: {}
 
   expo-splash-screen@0.30.10(expo@53.0.22(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.28.3)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.5(@babel/core@7.28.3)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:

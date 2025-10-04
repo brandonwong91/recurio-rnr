@@ -26,7 +26,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png",
       "manifest": {
         "name": "Recurio RNR",
@@ -54,7 +54,7 @@
       [
         "expo-router",
         {
-          "origin": "https://recurio-rnr.vercel.app/"
+          "origin": "https://recurio-rnr.vercel.app"
         }
       ],
       "@react-native-google-signin/google-signin"

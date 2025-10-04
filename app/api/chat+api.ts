@@ -1,14 +1,14 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText, convertToModelMessages, UIMessage } from "ai";
 
-export const dynamic = "force-dynamic";
+// export const dynamic = "force-dynamic";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+export async function POST(request: Request) {
+  const { messages }: { messages: UIMessage[] } = await request.json();
 
   const result = await streamText({
     model: google("gemini-2.5-flash"),
