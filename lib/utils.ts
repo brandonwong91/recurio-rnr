@@ -7,6 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const generateAPIUrl = (relativePath: string) => {
+  const extra = Constants.expoConfig?.extra ?? {};
+
   const origin = Constants.experienceUrl.replace("exp://", "http://");
 
   const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
@@ -15,11 +17,11 @@ export const generateAPIUrl = (relativePath: string) => {
     return origin.concat(path);
   }
 
-  if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
+  if (!extra.EXPO_PUBLIC_API_BASE_URL) {
     throw new Error(
       "EXPO_PUBLIC_API_BASE_URL environment variable is not defined"
     );
   }
 
-  return process.env.EXPO_PUBLIC_API_BASE_URL.concat(path);
+  return extra.EXPO_PUBLIC_API_BASE_URL.concat(path);
 };

@@ -63,6 +63,7 @@
       "typedRoutes": true
     },
     "extra": {
+      "EXPO_PUBLIC_API_BASE_URL": "https://recurio-rnr.vercel.app",
       "router": {},
       "eas": {
         "projectId": "ee66e4a2-5cfb-462d-affb-fed7c8329637"
