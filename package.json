@@ -47,6 +47,7 @@
     "@rn-primitives/slot": "~1.2.0",
     "@rn-primitives/tooltip": "~1.2.0",
     "@supabase/supabase-js": "^2.56.1",
+    "ai": "^5.0.60",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
