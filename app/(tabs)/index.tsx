@@ -30,7 +30,7 @@ export default function ChatScreen() {
       api: generateAPIUrl("/api/chat"),
     }),
   });
-
+  console.log(status);
   const isLoading = status === "submitted" || status === "streaming";
 
   const handleSendMessage = () => {
@@ -128,7 +128,15 @@ export default function ChatScreen() {
                       case "text": // we don't use any reasoning or tool calls in this example
                         return (
                           <ResponseView key={`${message.id}-${i}`}>
-                            {part.text}
+                            <Text
+                              className={cn(
+                                message.role === "user"
+                                  ? "text-primary-foreground"
+                                  : "text-secondary-foreground"
+                              )}
+                            >
+                              {part.text}
+                            </Text>
                           </ResponseView>
                         );
                       default:
@@ -170,7 +178,7 @@ export default function ChatScreen() {
           }}
         />
         <PromptInputSubmit
-          status={status === "streaming" ? "streaming" : "ready"}
+          status={status}
           disabled={!input.trim()}
           className="absolute bottom-1 right-1"
         />
