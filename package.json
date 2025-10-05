@@ -13,7 +13,8 @@
     "postinstall": "npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
     "vercel-build": "expo export -p web",
     "build:android": "eas build --platform android",
-    "build:android:dev": "eas build --platform android --profile preview"
+    "build:android:dev": "eas build --platform android --profile preview",
+    "local": "eas build --platform android --local"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.14",

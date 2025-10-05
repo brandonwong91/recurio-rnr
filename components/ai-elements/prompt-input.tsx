@@ -594,7 +594,7 @@ export const PromptInputButton = ({
   ...props
 }: PromptInputButtonProps) => {
   const newSize =
-    (size ?? Children.count(props.children) > 1) ? "default" : "icon";
+    size ?? Children.count(props.children) > 1 ? "default" : "icon";
 
   return (
     <Button
@@ -680,7 +680,7 @@ export const PromptInputSubmit = ({
   return (
     <Button
       aria-label="Submit"
-      className={cn("gap-1.5 rounded-lg", className)}
+      className={cn("gap-1.5 rounded-lg text-white dark:text-black", className)}
       size={size}
       type="submit"
       variant={variant}
