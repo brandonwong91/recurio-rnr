@@ -1,7 +1,8 @@
 import * as React from "react";
+import { Platform, View, type ViewProps } from "react-native";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "~/lib/utils";
-import { Cross } from "lucide-react";
+import { Cross } from "lucide-react-native";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -50,11 +51,8 @@ const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
+const DialogHeader = ({ className, ...props }: ViewProps) => (
+  <View
     className={cn(
       "flex flex-col space-y-1.5 text-center sm:text-left",
       className
@@ -64,11 +62,8 @@ const DialogHeader = ({
 );
 DialogHeader.displayName = "DialogHeader";
 
-const DialogFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
+const DialogFooter = ({ className, ...props }: ViewProps) => (
+  <View
     className={cn(
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       className

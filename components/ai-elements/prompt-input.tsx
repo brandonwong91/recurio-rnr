@@ -25,7 +25,7 @@ import {
   SendIcon,
   SquareIcon,
   XIcon,
-} from "lucide-react";
+} from "lucide-react-native";
 import { nanoid } from "nanoid";
 import {
   type ChangeEventHandler,
@@ -33,10 +33,7 @@ import {
   type ClipboardEventHandler,
   type ComponentProps,
   createContext,
-  type FormEvent,
-  type FormEventHandler,
   Fragment,
-  type HTMLAttributes,
   type KeyboardEventHandler,
   type RefObject,
   useCallback,
@@ -47,6 +44,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Image, Platform, View } from "react-native";
 
 type AttachmentsContext = {
   files: (FileUIPart & { id: string })[];
@@ -55,6 +53,10 @@ type AttachmentsContext = {
   clear: () => void;
   openFileDialog: () => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
+  // Add text state and submit handler
+  text: string;
+  setText: (text: string) => void;
+  submit: () => void;
 };
 
 const AttachmentsContext = createContext<AttachmentsContext | null>(null);
@@ -71,7 +73,7 @@ export const usePromptInputAttachments = () => {
   return context;
 };
 
-export type PromptInputAttachmentProps = HTMLAttributes<HTMLDivElement> & {
+export type PromptInputAttachmentProps = ComponentProps<typeof View> & {
   data: FileUIPart & { id: string };
   className?: string;
 };
@@ -83,41 +85,43 @@ export function PromptInputAttachment({
 }: PromptInputAttachmentProps) {
   const attachments = usePromptInputAttachments();
 
+  if (Platform.OS !== "web") {
+    return null;
+  }
+
   return (
-    <div
+    <View
       className={cn("group relative h-14 w-14 rounded-md border", className)}
       key={data.id}
       {...props}
     >
       {data.mediaType?.startsWith("image/") && data.url ? (
-        <img
-          alt={data.filename || "attachment"}
+        <Image
+          accessibilityLabel={data.filename || "attachment"}
           className="size-full rounded-md object-cover"
-          height={56}
-          src={data.url}
-          width={56}
+          source={{ uri: data.url }}
         />
       ) : (
-        <div className="flex size-full items-center justify-center text-muted-foreground">
+        <View className="flex size-full items-center justify-center text-muted-foreground">
           <PaperclipIcon className="size-4" />
-        </div>
+        </View>
       )}
       <Button
         aria-label="Remove attachment"
         className="-right-1.5 -top-1.5 absolute h-6 w-6 rounded-full opacity-0 group-hover:opacity-100"
-        onClick={() => attachments.remove(data.id)}
+        onPress={() => attachments.remove(data.id)}
         size="icon"
         type="button"
         variant="outline"
       >
         <XIcon className="h-3 w-3" />
       </Button>
-    </div>
+    </View>
   );
 }
 
 export type PromptInputAttachmentsProps = Omit<
-  HTMLAttributes<HTMLDivElement>,
+  ComponentProps<typeof View>,
   "children"
 > & {
   children: (attachment: FileUIPart & { id: string }) => React.ReactNode;
@@ -130,23 +134,32 @@ export function PromptInputAttachments({
 }: PromptInputAttachmentsProps) {
   const attachments = usePromptInputAttachments();
   const [height, setHeight] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<View>(null);
 
   useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) {
       return;
     }
-    const ro = new ResizeObserver(() => {
+    if (Platform.OS === "web") {
+      const ro = new ResizeObserver(() => {
+        // @ts-ignore
+        setHeight(el.getBoundingClientRect().height);
+      });
+      // @ts-ignore
+      ro.observe(el);
+      // @ts-ignore
       setHeight(el.getBoundingClientRect().height);
-    });
-    ro.observe(el);
-    setHeight(el.getBoundingClientRect().height);
-    return () => ro.disconnect();
+      return () => ro.disconnect();
+    }
   }, []);
 
+  if (Platform.OS !== "web") {
+    return null;
+  }
+
   return (
-    <div
+    <View
       aria-live="polite"
       className={cn(
         "overflow-hidden transition-[height] duration-200 ease-out",
@@ -155,12 +168,12 @@ export function PromptInputAttachments({
       style={{ height: attachments.files.length ? height : 0 }}
       {...props}
     >
-      <div className="flex flex-wrap gap-2 p-3 pt-3" ref={contentRef}>
+      <View className="flex flex-wrap gap-2 p-3 pt-3" ref={contentRef}>
         {attachments.files.map((file) => (
           <Fragment key={file.id}>{children(file)}</Fragment>
         ))}
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }
 
@@ -176,10 +189,14 @@ export const PromptInputActionAddAttachments = ({
 }: PromptInputActionAddAttachmentsProps) => {
   const attachments = usePromptInputAttachments();
 
+  if (Platform.OS !== "web") {
+    return null;
+  }
+
   return (
     <DropdownMenuItem
       {...props}
-      onSelect={(e) => {
+      onPress={(e) => {
         e.preventDefault();
         attachments.openFileDialog();
       }}
@@ -194,11 +211,8 @@ export type PromptInputMessage = {
   files?: FileUIPart[];
 };
 
-export type PromptInputProps = Omit<
-  HTMLAttributes<HTMLFormElement>,
-  "onSubmit"
-> & {
-  accept?: string; // e.g., "image/*" or leave undefined for any
+export type PromptInputProps = Omit<ComponentProps<typeof View>, "onSubmit"> & {
+  accept?: string; // e.g., 'image/*' or leave undefined for any
   multiple?: boolean;
   // When true, accepts drops anywhere on document. Default false (opt-in).
   globalDrop?: boolean;
@@ -211,10 +225,7 @@ export type PromptInputProps = Omit<
     code: "max_files" | "max_file_size" | "accept";
     message: string;
   }) => void;
-  onSubmit: (
-    message: PromptInputMessage,
-    event: FormEvent<HTMLFormElement>
-  ) => void;
+  onSubmit: (message: PromptInputMessage) => void;
 };
 
 export const PromptInput = ({
@@ -231,20 +242,26 @@ export const PromptInput = ({
   ...props
 }: PromptInputProps) => {
   const [items, setItems] = useState<(FileUIPart & { id: string })[]>([]);
+  const [text, setText] = useState(""); // Added text state
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const anchorRef = useRef<HTMLSpanElement>(null);
+  const anchorRef = useRef<View>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
   // Find nearest form to scope drag & drop
   useEffect(() => {
-    const root = anchorRef.current?.closest("form");
-    if (root instanceof HTMLFormElement) {
-      formRef.current = root;
+    if (Platform.OS === "web") {
+      const domNode = anchorRef.current as unknown as HTMLElement;
+      const root = domNode?.closest("form");
+      if (root) {
+        formRef.current = root;
+      }
     }
   }, []);
 
   const openFileDialog = useCallback(() => {
-    inputRef.current?.click();
+    if (Platform.OS === "web") {
+      inputRef.current?.click();
+    }
   }, []);
 
   const matchesAccept = useCallback(
@@ -252,7 +269,7 @@ export const PromptInput = ({
       if (!accept || accept.trim() === "") {
         return true;
       }
-      // Simple check: if accept includes "image/*", filter to images; otherwise allow.
+      // Simple check: if accept includes 'image/*', filter to images; otherwise allow.
       if (accept.includes("image/*")) {
         return f.type.startsWith("image/");
       }
@@ -263,6 +280,7 @@ export const PromptInput = ({
 
   const add = useCallback(
     (files: File[] | FileList) => {
+      if (Platform.OS !== "web") return;
       const incoming = Array.from(files);
       const accepted = incoming.filter((f) => matchesAccept(f));
       if (accepted.length === 0) {
@@ -314,7 +332,7 @@ export const PromptInput = ({
   const remove = useCallback((id: string) => {
     setItems((prev) => {
       const found = prev.find((file) => file.id === id);
-      if (found?.url) {
+      if (found?.url && Platform.OS === "web") {
         URL.revokeObjectURL(found.url);
       }
       return prev.filter((file) => file.id !== id);
@@ -324,7 +342,7 @@ export const PromptInput = ({
   const clear = useCallback(() => {
     setItems((prev) => {
       for (const file of prev) {
-        if (file.url) {
+        if (file.url && Platform.OS === "web") {
           URL.revokeObjectURL(file.url);
         }
       }
@@ -335,7 +353,7 @@ export const PromptInput = ({
   // Note: File input cannot be programmatically set for security reasons
   // The syncHiddenInput prop is no longer functional
   useEffect(() => {
-    if (syncHiddenInput && inputRef.current) {
+    if (syncHiddenInput && inputRef.current && Platform.OS === "web") {
       // Clear the input when items are cleared
       if (items.length === 0) {
         inputRef.current.value = "";
@@ -345,6 +363,7 @@ export const PromptInput = ({
 
   // Attach drop handlers on nearest form and document (opt-in)
   useEffect(() => {
+    if (Platform.OS !== "web") return;
     const form = formRef.current;
     if (!form) {
       return;
@@ -362,16 +381,20 @@ export const PromptInput = ({
         add(e.dataTransfer.files);
       }
     };
+    // @ts-ignore
     form.addEventListener("dragover", onDragOver);
+    // @ts-ignore
     form.addEventListener("drop", onDrop);
     return () => {
+      // @ts-ignore
       form.removeEventListener("dragover", onDragOver);
+      // @ts-ignore
       form.removeEventListener("drop", onDrop);
     };
   }, [add]);
 
   useEffect(() => {
-    if (!globalDrop) {
+    if (Platform.OS !== "web" || !globalDrop) {
       return;
     }
     const onDragOver = (e: DragEvent) => {
@@ -412,27 +435,28 @@ export const PromptInput = ({
     });
   };
 
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const text = (formData.get("message") as string) || "";
-
-    // Convert blob URLs to data URLs asynchronously
-    Promise.all(
-      items.map(async ({ id, ...item }) => {
-        if (item.url && item.url.startsWith("blob:")) {
-          return {
-            ...item,
-            url: await convertBlobUrlToDataUrl(item.url),
-          };
-        }
-        return item;
-      })
-    ).then((files: FileUIPart[]) => {
-      onSubmit({ text, files }, event);
+  const submit = () => {
+    if (Platform.OS === "web") {
+      Promise.all(
+        items.map(async ({ id, ...item }) => {
+          if (item.url && item.url.startsWith("blob:")) {
+            return {
+              ...item,
+              url: await convertBlobUrlToDataUrl(item.url),
+            };
+          }
+          return item;
+        })
+      ).then((files: FileUIPart[]) => {
+        onSubmit({ text, files });
+        clear();
+        setText("");
+      });
+    } else {
+      onSubmit({ text, files: items });
       clear();
-    });
+      setText("");
+    }
   };
 
   const ctx = useMemo<AttachmentsContext>(
@@ -443,42 +467,46 @@ export const PromptInput = ({
       clear,
       openFileDialog,
       fileInputRef: inputRef,
+      text,
+      setText,
+      submit,
     }),
-    [items, add, remove, clear, openFileDialog]
+    [items, add, remove, clear, openFileDialog, text]
   );
 
   return (
     <AttachmentsContext.Provider value={ctx}>
-      <span aria-hidden="true" className="hidden" ref={anchorRef} />
-      <input
-        accept={accept}
-        className="hidden"
-        multiple={multiple}
-        onChange={handleChange}
-        ref={inputRef}
-        type="file"
-      />
-      <form
+      <View aria-hidden={true} className="hidden" ref={anchorRef} />
+      {Platform.OS === "web" && (
+        <input
+          accept={accept}
+          className="hidden"
+          multiple={multiple}
+          onChange={handleChange}
+          ref={inputRef}
+          type="file"
+        />
+      )}
+      <View
         className={cn(
           "w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm",
           className
         )}
-        onSubmit={handleSubmit}
         {...props}
       >
         {children}
-      </form>
+      </View>
     </AttachmentsContext.Provider>
   );
 };
 
-export type PromptInputBodyProps = HTMLAttributes<HTMLDivElement>;
+export type PromptInputBodyProps = ComponentProps<typeof View>;
 
 export const PromptInputBody = ({
   className,
   ...props
 }: PromptInputBodyProps) => (
-  <div className={cn(className, "flex flex-col")} {...props} />
+  <View className={cn(className, "flex flex-col")} {...props} />
 );
 
 export type PromptInputTextareaProps = ComponentProps<typeof Textarea>;
@@ -505,14 +533,12 @@ export const PromptInputTextarea = ({
 
       // Submit on Enter (without Shift)
       e.preventDefault();
-      const form = e.currentTarget.form;
-      if (form) {
-        form.requestSubmit();
-      }
+      attachments.submit();
     }
   };
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
+    if (Platform.OS !== "web") return;
     const items = event.clipboardData?.items;
 
     if (!items) {
@@ -521,7 +547,8 @@ export const PromptInputTextarea = ({
 
     const files: File[] = [];
 
-    for (const item of items) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
       if (item.kind === "file") {
         const file = item.getAsFile();
         if (file) {
@@ -536,6 +563,16 @@ export const PromptInputTextarea = ({
     }
   };
 
+  const handleChange = (e: any) => {
+    if (Platform.OS === "web") {
+      attachments.setText(e.target.value);
+      onChange?.(e);
+    } else {
+      attachments.setText(e.nativeEvent.text);
+      onChange?.(e);
+    }
+  };
+
   return (
     <Textarea
       className={cn(
@@ -546,36 +583,36 @@ export const PromptInputTextarea = ({
         className
       )}
       name="message"
-      onChange={(e) => {
-        onChange?.(e);
-      }}
-      onKeyDown={handleKeyDown}
-      onPaste={handlePaste}
+      value={attachments.text}
+      onChange={handleChange}
+      onKeyDown={Platform.OS === "web" ? handleKeyDown : undefined}
+      onPaste={Platform.OS === "web" ? handlePaste : undefined}
+      onSubmitEditing={Platform.OS !== "web" ? attachments.submit : undefined}
       placeholder={placeholder}
       {...props}
     />
   );
 };
 
-export type PromptInputToolbarProps = HTMLAttributes<HTMLDivElement>;
+export type PromptInputToolbarProps = ComponentProps<typeof View>;
 
 export const PromptInputToolbar = ({
   className,
   ...props
 }: PromptInputToolbarProps) => (
-  <div
+  <View
     className={cn("flex items-center justify-between p-1", className)}
     {...props}
   />
 );
 
-export type PromptInputToolsProps = HTMLAttributes<HTMLDivElement>;
+export type PromptInputToolsProps = ComponentProps<typeof View>;
 
 export const PromptInputTools = ({
   className,
   ...props
 }: PromptInputToolsProps) => (
-  <div
+  <View
     className={cn(
       "flex items-center gap-1",
       "[&_button:first-child]:rounded-bl-xl",
@@ -667,6 +704,7 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
+  const { submit } = usePromptInputAttachments();
   let Icon = <SendIcon className="size-4" />;
 
   if (status === "submitted") {
@@ -682,7 +720,7 @@ export const PromptInputSubmit = ({
       aria-label="Submit"
       className={cn("gap-1.5 rounded-lg text-white dark:text-black", className)}
       size={size}
-      type="submit"
+      onPress={submit}
       variant={variant}
       {...props}
     >
@@ -708,7 +746,7 @@ export const PromptInputModelSelectTrigger = ({
   <SelectTrigger
     className={cn(
       "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
-      'hover:bg-accent hover:text-foreground [&[aria-expanded="true"]]:bg-accent [&[aria-expanded="true"]]:text-foreground',
+      "hover:bg-accent hover:text-foreground",
       className
     )}
     {...props}

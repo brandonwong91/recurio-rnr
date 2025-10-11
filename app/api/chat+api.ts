@@ -1,8 +1,6 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText, convertToModelMessages, UIMessage } from "ai";
 
-// export const dynamic = "force-dynamic";
-
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
