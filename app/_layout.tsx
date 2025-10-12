@@ -17,6 +17,7 @@ import { supabase } from "~/lib/supabase";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { AnimatedSplashScreen } from "~/components/AnimatedSplashScreen";
+import "./polyfills";
 
 SplashScreen.preventAutoHideAsync();
 

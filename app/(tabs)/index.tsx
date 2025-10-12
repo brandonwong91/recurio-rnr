@@ -23,13 +23,19 @@ import { Input } from "~/components/ui/input";
 import { cn, generateAPIUrl } from "~/lib/utils";
 
 export default function ChatScreen() {
-  const { messages, sendMessage, status } = useChat({
+  const apiUrl = generateAPIUrl("/api/chat");
+  console.log("Generated API URL:", apiUrl);
+
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
-      api: generateAPIUrl("/api/chat"),
+      api: apiUrl,
     }),
   });
-  console.log(status);
+  console.log("Chat status:", status);
+  if (error) {
+    console.error("Chat error:", error);
+  }
 
   return (
     <View className="flex-1 flex-col p-4 max-w-md mx-auto w-full bg-secondary/30">
@@ -76,11 +82,14 @@ export default function ChatScreen() {
       <PromptInput
         className="mt-4 w-full max-w-2xl mx-auto relative"
         onSubmit={(message) => {
+          console.log("PromptInput onSubmit triggered. Message:", message);
           if (message.text && message.text.trim() !== "") {
-            sendMessage({
+            const userMessage = {
               role: "user",
               parts: [{ type: "text", text: message.text }],
-            } as UIMessage);
+            } as UIMessage;
+            console.log("Calling sendMessage with:", userMessage);
+            sendMessage(userMessage);
           }
         }}
       >
