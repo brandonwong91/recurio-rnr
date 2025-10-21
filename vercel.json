@@ -4,12 +4,12 @@
   "functions": {
     "api/index.ts": {
       "runtime": "@vercel/node@5.1.8",
-      "includeFiles": "dist/server/**"
+      "includeFiles": ["dist/server/**"]
     }
   },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/(?!auth/callback$|_next/.*)(.*)",
       "destination": "/api/index"
     }
   ]

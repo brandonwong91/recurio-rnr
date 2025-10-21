@@ -45,6 +45,7 @@ import {
   useState,
 } from "react";
 import { Image, Platform, View } from "react-native";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 type AttachmentsContext = {
   files: (FileUIPart & { id: string })[];
@@ -705,20 +706,23 @@ export const PromptInputSubmit = ({
   ...props
 }: PromptInputSubmitProps) => {
   const { submit } = usePromptInputAttachments();
-  let Icon = <SendIcon className="size-4" />;
+  const { colorScheme } = useColorScheme();
+  const iconColor = colorScheme === "dark" ? "black" : "white";
+
+  let Icon = <SendIcon color={iconColor} className="size-4" />;
 
   if (status === "submitted") {
-    Icon = <Loader2Icon className="size-4 animate-spin" />;
+    Icon = <Loader2Icon color={iconColor} className="size-4 animate-spin" />;
   } else if (status === "streaming") {
-    Icon = <SquareIcon className="size-4" />;
+    Icon = <SquareIcon color={iconColor} className="size-4" />;
   } else if (status === "error") {
-    Icon = <XIcon className="size-4" />;
+    Icon = <XIcon color={iconColor} className="size-4" />;
   }
 
   return (
     <Button
       aria-label="Submit"
-      className={cn("gap-1.5 rounded-lg text-white dark:text-black", className)}
+      className={cn("gap-1.5 rounded-lg bg-primary", className)}
       size={size}
       onPress={submit}
       variant={variant}

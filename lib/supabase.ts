@@ -93,11 +93,12 @@ const createSessionFromUrl = async (url: string) => {
 };
 
 export const signInWithGoogle = async () => {
+  const redirectUri = makeRedirectUri();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo,
-      skipBrowserRedirect: true, // This is important to handle the redirect manually
+      redirectTo: redirectUri,
+      skipBrowserRedirect: Platform.OS !== "web",
     },
   });
 
@@ -106,13 +107,13 @@ export const signInWithGoogle = async () => {
     return;
   }
 
-  // Open the authentication URL in a web browser
-  const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-  // Handle the redirect back to the app
-  if (res.type === "success") {
-    const { url } = res;
-    await createSessionFromUrl(url);
+  if (Platform.OS === "web") {
+    window.location.href = data.url;
+  } else {
+    const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+    if (res.type === "success") {
+      await createSessionFromUrl(res.url);
+    }
   }
 };
 
@@ -125,15 +126,12 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
-
 // ****************************************************************************
 // Grocery Item CRUD operations
 // ****************************************************************************
 
 export async function getGroceryItems() {
-  const { data, error } = await supabase
-    .from('grocery_items')
-    .select(`
+  const { data, error } = await supabase.from("grocery_items").select(`
       id,
       name,
       quantity,
@@ -144,45 +142,54 @@ export async function getGroceryItems() {
     `);
 
   if (error) {
-    console.error('Error fetching grocery items:', error);
+    console.error("Error fetching grocery items:", error);
     return [];
   }
 
   // The tags are returned as an array of objects. We need to flatten them to an array of strings.
-  return data.map(item => ({
+  return data.map((item) => ({
     ...item,
     checkedAt: item.checked_at,
     tags: item.tags.map((tag: any) => tag.name),
   }));
 }
 
-export async function addGroceryItem(item: { name: string, quantity?: number, tags?: string[], frequency?: number }) {
-  const { data: { user } } = await supabase.auth.getUser();
+export async function addGroceryItem(item: {
+  name: string;
+  quantity?: number;
+  tags?: string[];
+  frequency?: number;
+}) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    console.error('User not authenticated');
+    console.error("User not authenticated");
     return null;
   }
 
   // 1. Add the tags to the tags table (if they don't exist)
   const tagsToAdd = item.tags || [];
   const { data: existingTags, error: tagsError } = await supabase
-    .from('tags')
-    .select('id, name')
-    .in('name', tagsToAdd);
+    .from("tags")
+    .select("id, name")
+    .in("name", tagsToAdd);
 
   if (tagsError) {
-    console.error('Error fetching tags:', tagsError);
+    console.error("Error fetching tags:", tagsError);
     return null;
   }
 
-  const newTags = tagsToAdd.filter(tagName => !existingTags.some(t => t.name === tagName));
+  const newTags = tagsToAdd.filter(
+    (tagName) => !existingTags.some((t) => t.name === tagName)
+  );
   const { data: addedTags, error: addTagsError } = await supabase
-    .from('tags')
-    .insert(newTags.map(name => ({ name })))
-    .select('id, name');
+    .from("tags")
+    .insert(newTags.map((name) => ({ name })))
+    .select("id, name");
 
   if (addTagsError) {
-    console.error('Error adding tags:', addTagsError);
+    console.error("Error adding tags:", addTagsError);
     return null;
   }
 
@@ -190,42 +197,50 @@ export async function addGroceryItem(item: { name: string, quantity?: number, ta
 
   // 2. Add the grocery item
   const { data: newItem, error: addItemError } = await supabase
-    .from('grocery_items')
+    .from("grocery_items")
     .insert({
       name: item.name,
       quantity: item.quantity,
       user_id: user.id,
       frequency: item.frequency,
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (addItemError) {
-    console.error('Error adding grocery item:', addItemError);
+    console.error("Error adding grocery item:", addItemError);
     return null;
   }
 
   // 3. Add the associations in the join table
-  const tagIds = allTags.map(t => t.id);
-  const { error: joinError } = await supabase
-    .from('grocery_item_tags')
-    .insert(tagIds.map(tag_id => ({
+  const tagIds = allTags.map((t) => t.id);
+  const { error: joinError } = await supabase.from("grocery_item_tags").insert(
+    tagIds.map((tag_id) => ({
       grocery_item_id: newItem.id,
       tag_id,
-    })));
+    }))
+  );
 
   if (joinError) {
-    console.error('Error adding grocery item tags:', joinError);
+    console.error("Error adding grocery item tags:", joinError);
     return null;
   }
 
   return { ...item, id: newItem.id, done: false, checkedAt: null };
 }
 
-export async function updateGroceryItem(item: { id: number, name: string, quantity?: number, tags?: string[], done: boolean, checkedAt: Date | null, frequency?: number }) {
+export async function updateGroceryItem(item: {
+  id: number;
+  name: string;
+  quantity?: number;
+  tags?: string[];
+  done: boolean;
+  checkedAt: Date | null;
+  frequency?: number;
+}) {
   // 1. Update the item itself
   const { error: updateError } = await supabase
-    .from('grocery_items')
+    .from("grocery_items")
     .update({
       name: item.name,
       quantity: item.quantity,
@@ -233,58 +248,60 @@ export async function updateGroceryItem(item: { id: number, name: string, quanti
       checked_at: item.checkedAt,
       frequency: item.frequency,
     })
-    .eq('id', item.id);
+    .eq("id", item.id);
 
   if (updateError) {
-    console.error('Error updating grocery item:', updateError);
+    console.error("Error updating grocery item:", updateError);
     return null;
   }
 
   // 2. Update the tags (this is more complex, for simplicity we will delete all tags and re-add them)
   const { error: deleteTagsError } = await supabase
-    .from('grocery_item_tags')
+    .from("grocery_item_tags")
     .delete()
-    .eq('grocery_item_id', item.id);
+    .eq("grocery_item_id", item.id);
 
   if (deleteTagsError) {
-    console.error('Error deleting grocery item tags:', deleteTagsError);
+    console.error("Error deleting grocery item tags:", deleteTagsError);
     return null;
   }
 
   const tagsToAdd = item.tags || [];
   const { data: existingTags, error: tagsError } = await supabase
-    .from('tags')
-    .select('id, name')
-    .in('name', tagsToAdd);
+    .from("tags")
+    .select("id, name")
+    .in("name", tagsToAdd);
 
   if (tagsError) {
-    console.error('Error fetching tags:', tagsError);
+    console.error("Error fetching tags:", tagsError);
     return null;
   }
 
-  const newTags = tagsToAdd.filter(tagName => !existingTags.some(t => t.name === tagName));
+  const newTags = tagsToAdd.filter(
+    (tagName) => !existingTags.some((t) => t.name === tagName)
+  );
   const { data: addedTags, error: addTagsError } = await supabase
-    .from('tags')
-    .insert(newTags.map(name => ({ name })))
-    .select('id, name');
+    .from("tags")
+    .insert(newTags.map((name) => ({ name })))
+    .select("id, name");
 
   if (addTagsError) {
-    console.error('Error adding tags:', addTagsError);
+    console.error("Error adding tags:", addTagsError);
     return null;
   }
 
   const allTags = [...existingTags, ...addedTags];
-  const tagIds = allTags.map(t => t.id);
+  const tagIds = allTags.map((t) => t.id);
 
-  const { error: joinError } = await supabase
-    .from('grocery_item_tags')
-    .insert(tagIds.map(tag_id => ({
+  const { error: joinError } = await supabase.from("grocery_item_tags").insert(
+    tagIds.map((tag_id) => ({
       grocery_item_id: item.id,
       tag_id,
-    })));
+    }))
+  );
 
   if (joinError) {
-    console.error('Error adding grocery item tags:', joinError);
+    console.error("Error adding grocery item tags:", joinError);
     return null;
   }
 
@@ -292,13 +309,10 @@ export async function updateGroceryItem(item: { id: number, name: string, quanti
 }
 
 export async function deleteGroceryItem(id: number) {
-  const { error } = await supabase
-    .from('grocery_items')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from("grocery_items").delete().eq("id", id);
 
   if (error) {
-    console.error('Error deleting grocery item:', error);
+    console.error("Error deleting grocery item:", error);
   }
 }
 
@@ -341,7 +355,9 @@ export async function getExercises() {
 }
 
 export async function addWorkout(name: string, exerciseIds: string[]) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     console.error("User not authenticated");
     return null;
@@ -368,10 +384,7 @@ export async function addWorkout(name: string, exerciseIds: string[]) {
     );
 
   if (addWorkoutExercisesError) {
-    console.error(
-      "Error adding workout exercises:",
-      addWorkoutExercisesError
-    );
+    console.error("Error adding workout exercises:", addWorkoutExercisesError);
     return null;
   }
 
@@ -379,7 +392,9 @@ export async function addWorkout(name: string, exerciseIds: string[]) {
 }
 
 export async function addExercise(name: string) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     console.error("User not authenticated");
     return null;
@@ -438,7 +453,9 @@ export async function deleteExercise(id: string) {
 }
 
 export async function startWorkoutSession(workoutId: string) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     console.error("User not authenticated");
     return null;
@@ -540,8 +557,7 @@ export async function getExercisesWithMetrics() {
     return [];
   }
 
-  const { data: sets, error: setsError } = await supabase
-    .from("workout_sets")
+  const { data: sets, error: setsError } = await supabase.from("workout_sets")
     .select(`
       exercise_id,
       reps,
@@ -577,7 +593,9 @@ export async function getExercisesWithMetrics() {
     }).created_at;
 
     const bestWeight = Math.max(...exerciseSets.map((s) => s.weight || 0));
-    const setsWithNoWeight = exerciseSets.filter((s) => !s.weight || s.weight === 0);
+    const setsWithNoWeight = exerciseSets.filter(
+      (s) => !s.weight || s.weight === 0
+    );
     const bestReps =
       setsWithNoWeight.length > 0
         ? Math.max(...setsWithNoWeight.map((s) => s.reps))
@@ -601,48 +619,55 @@ export async function getExercisesWithMetrics() {
 import { PaymentItemType } from "./types";
 
 export async function getPaymentItems() {
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*');
+  const { data, error } = await supabase.from("payments").select("*");
 
   if (error) {
-    console.error('Error fetching payment items:', error);
+    console.error("Error fetching payment items:", error);
     return [];
   }
   return data as PaymentItemType[];
 }
 
-export async function addPaymentItem(item: Omit<PaymentItemType, 'id' | 'created_at' | 'user_id' | 'done_status' | 'paid_date'>) {
-  const { data: { user } } = await supabase.auth.getUser();
+export async function addPaymentItem(
+  item: Omit<
+    PaymentItemType,
+    "id" | "created_at" | "user_id" | "done_status" | "paid_date"
+  >
+) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    console.error('User not authenticated');
+    console.error("User not authenticated");
     return null;
   }
 
   const { data: newItem, error } = await supabase
-    .from('payments')
+    .from("payments")
     .insert({ ...item, user_id: user.id })
     .select()
     .single();
 
   if (error) {
-    console.error('Error adding payment item:', error);
+    console.error("Error adding payment item:", error);
     return null;
   }
 
   return newItem as PaymentItemType;
 }
 
-export async function updatePaymentItem(item: Partial<PaymentItemType> & { id: string }) {
+export async function updatePaymentItem(
+  item: Partial<PaymentItemType> & { id: string }
+) {
   const { error, data } = await supabase
-    .from('payments')
+    .from("payments")
     .update(item)
-    .eq('id', item.id)
+    .eq("id", item.id)
     .select()
     .single();
 
   if (error) {
-    console.error('Error updating payment item:', error);
+    console.error("Error updating payment item:", error);
     return null;
   }
 
@@ -650,12 +675,9 @@ export async function updatePaymentItem(item: Partial<PaymentItemType> & { id: s
 }
 
 export async function deletePaymentItem(id: string) {
-  const { error } = await supabase
-    .from('payments')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from("payments").delete().eq("id", id);
 
   if (error) {
-    console.error('Error deleting payment item:', error);
+    console.error("Error deleting payment item:", error);
   }
 }
