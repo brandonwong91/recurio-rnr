@@ -9,7 +9,7 @@
   },
   "rewrites": [
     {
-      "source": "/(?!auth/callback$|_next/.*)(.*)",
+      "source": "/((?!auth/callback$|_next/.*).*)",
       "destination": "/api/index"
     }
   ]
