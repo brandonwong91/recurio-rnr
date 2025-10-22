@@ -22,7 +22,7 @@ export const generateAPIUrl = (relativePath: string) => {
 
   if (process.env.NODE_ENV === "development") {
     const experienceUrl = Constants.experienceUrl;
-    console.log("🔍 experienceUrl:", experienceUrl);
+    console.log("experienceUrl:", experienceUrl);
 
     const origin = experienceUrl
       ? experienceUrl.replace("exp://", "http://")
