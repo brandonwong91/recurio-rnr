@@ -9,30 +9,27 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuth = async () => {
       try {
-        // Parse URL query parameters (works on web due to window.location)
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get("code");
-        const accessToken = urlParams.get("access_token");
+        // Parse URL hash parameters (e.g., #access_token=...&refresh_token=...)
+        const hash = window.location.hash.substring(1); // Remove '#'
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
 
-        if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(
-            code
-          );
-          if (error) throw error;
-          router.replace("/");
-        } else if (accessToken) {
-          const { data, error } = await supabase.auth.setSession({
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
             access_token: accessToken,
-            refresh_token: urlParams.get("refresh_token") || "",
+            refresh_token: refreshToken,
           });
           if (error) throw error;
-          router.replace("/");
+          router.replace("/"); // Redirect to home on success
         } else {
-          throw new Error("No auth code or token found");
+          throw new Error(
+            "No access token or refresh token found in callback URL"
+          );
         }
       } catch (error) {
-        console.error("Auth error:", error);
-        router.replace("/login?error=auth-failed");
+        console.error("Auth callback error:", error);
+        router.replace("/login?error=auth-failed"); // Redirect with error
       }
     };
 
