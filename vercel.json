@@ -9,12 +9,12 @@
   },
   "rewrites": [
     {
-      "source": "/auth/callback",
-      "destination": "/auth/callback"
+      "source": "/api/(.*)",
+      "destination": "/api/index"
     },
     {
-      "source": "/((?!auth/callback|_next/.*).*)",
-      "destination": "/api/index"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
