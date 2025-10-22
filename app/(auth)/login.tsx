@@ -60,7 +60,7 @@ export default function LoginScreen() {
 
   const signInWithGoogleWeb = async () => {
     try {
-      const redirectUri = Linking.createURL("/auth/callback");
+      const redirectUri = Linking.createURL("/callback");
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
