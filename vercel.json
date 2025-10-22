@@ -1,6 +1,6 @@
 {
   "buildCommand": "expo export -p web",
-  "outputDirectory": "dist/client",
+  "outputDirectory": "dist",
   "functions": {
     "api/index.ts": {
       "runtime": "@vercel/node@5.1.8",
